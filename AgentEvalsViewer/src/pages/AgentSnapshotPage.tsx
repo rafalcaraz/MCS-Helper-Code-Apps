@@ -107,12 +107,12 @@ const useStyles = makeStyles({
     transition: 'background-color 120ms ease, border-color 120ms ease',
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground3,
-      borderColor: tokens.colorBrandStroke1,
+      ...shorthands.borderColor(tokens.colorBrandStroke1),
     },
   },
   dropzoneActive: {
     backgroundColor: tokens.colorBrandBackground2,
-    borderColor: tokens.colorBrandStroke1,
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
   },
   dropzoneIcon: {
     color: tokens.colorBrandForeground1,

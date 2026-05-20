@@ -59,7 +59,7 @@ const useStyles = makeStyles({
   sparkline: {
     display: 'flex',
     alignItems: 'flex-end',
-    columnGap: 2,
+    columnGap: '2px',
     height: '28px',
     marginTop: tokens.spacingVerticalXS,
   },

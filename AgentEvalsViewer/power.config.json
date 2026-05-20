@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "appId": null,
+  "appId": "38ea5fbc-8fe0-4cf5-88cf-ad7291cd7e42",
   "appDisplayName": "Agent Evaluations Viewer",
   "region": "prod",
-  "environmentId": "eb2d8ba3-28a6-efa4-8878-509c60c9fe1a",
+  "environmentId": "92ac575f-d43d-e38d-80a0-d70cec823715",
   "description": " ",
   "buildPath": "./dist",
   "buildEntryPoint": "index.html",

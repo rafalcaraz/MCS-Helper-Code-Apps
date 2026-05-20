@@ -139,12 +139,12 @@ export interface SnapshotFlow {
 }
 
 export class SnapshotParseError extends Error {
-  constructor(
-    message: string,
-    public readonly hint?: string,
-  ) {
+  readonly hint?: string
+
+  constructor(message: string, hint?: string) {
     super(message)
     this.name = 'SnapshotParseError'
+    this.hint = hint
   }
 }
 

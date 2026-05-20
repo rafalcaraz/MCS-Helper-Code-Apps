@@ -116,7 +116,7 @@ function notifyAll(): void {
   listeners.forEach((l) => l())
 }
 
-function getServerSnapshot(): string | null {
+function getServerSnapshot(): LastViewedEntry | null {
   return null
 }
 
