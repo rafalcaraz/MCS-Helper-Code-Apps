@@ -1,0 +1,79 @@
+name: Release Managed Solution
+
+on:
+  workflow_dispatch:
+    inputs:
+      solution_name:
+        description: 'Solution name in Dataverse'
+        required: true
+        default: 'ConvTranscriptViewerCodeApps'
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Detect app version from source
+        id: appversion
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/.*app-version">v\([^<]*\).*/\1/p' src/App.tsx)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected app version: $VERSION"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Authenticate pac CLI
+        shell: pwsh
+        run: |
+          $pac = $env:POWERPLATFORMTOOLS_PACPATH
+          & $pac auth create --applicationId ${{ secrets.PAC_APP_ID }} --clientSecret ${{ secrets.PAC_CLIENT_SECRET }} --tenant ${{ secrets.PAC_TENANT_ID }} --environment ${{ secrets.PAC_ENVIRONMENT_ID }}
+
+      - name: Export managed solution
+        shell: pwsh
+        run: |
+          $pac = $env:POWERPLATFORMTOOLS_PACPATH
+          & $pac solution export --name ${{ inputs.solution_name }} --path "${{ github.workspace }}\${{ inputs.solution_name }}_v${{ steps.appversion.outputs.version }}_managed.zip" --managed --environment ${{ secrets.PAC_ENVIRONMENT_ID }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.appversion.outputs.version }}
+          name: MCS Conversation Viewer v${{ steps.appversion.outputs.version }}
+          body: |
+            ## MCS Conversation Viewer v${{ steps.appversion.outputs.version }}
+
+            ### Installation
+            1. Download the managed solution `.zip` below
+            2. Import it into your Power Platform environment via [make.powerapps.com](https://make.powerapps.com) → Solutions → Import
+
+            ### Prerequisites
+            - Power Platform environment with **Code Apps enabled** in environment settings
+            - Copilot Studio agents deployed in the environment
+          files: |
+            ${{ github.workspace }}/${{ inputs.solution_name }}_v${{ steps.appversion.outputs.version }}_managed.zip
+          draft: false
+          prerelease: false
