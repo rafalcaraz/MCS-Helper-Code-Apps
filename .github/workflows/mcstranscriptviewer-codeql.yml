@@ -1,12 +1,22 @@
-name: CodeQL Security Analysis
+name: MCSTranscriptViewer CodeQL
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'MCSTranscriptViewer/**'
+      - '.github/workflows/mcstranscriptviewer-codeql.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'MCSTranscriptViewer/**'
+      - '.github/workflows/mcstranscriptviewer-codeql.yml'
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+
+defaults:
+  run:
+    working-directory: MCSTranscriptViewer
 
 jobs:
   analyze:
@@ -30,12 +40,14 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          source-root: MCSTranscriptViewer
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: MCSTranscriptViewer/package-lock.json
 
       - name: Install dependencies
         run: npm ci
