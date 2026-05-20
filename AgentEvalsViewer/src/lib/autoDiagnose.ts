@@ -282,7 +282,7 @@ export function diagnoseRunPattern(
       pattern: 'knowledge-source-broken',
       severity: 'danger',
       title: 'Knowledge source likely broken',
-      description: `${droppedNames} all dropped sharply in the latest run, but Tool use is still firing normally. That signature usually means a knowledge source (SharePoint site, website, uploaded file) changed shape or became unreachable — the agent is still calling the right tools, but the content it\'s grounding on isn\'t what it used to be.`,
+      description: `${droppedNames} all dropped sharply in the latest run, but Tool use is still firing normally. That signature usually means a knowledge source (SharePoint site, website, uploaded file) changed shape or became unreachable — the agent is still calling the right tools, but the content it's grounding on isn't what it used to be.`,
       suggestedActions: [
         'Open each knowledge source attached to this agent and confirm the URL/site/file is still reachable and hasn\'t been restructured.',
         'For SharePoint: check if anyone reorganized the document library, renamed pages, or changed permissions.',
@@ -344,7 +344,7 @@ export function diagnoseRunPattern(
     pattern: 'partial-degradation',
     severity: 'warning',
     title: `${dropped.length} metric${dropped.length === 1 ? '' : 's'} dropped vs baseline`,
-    description: `${top.label} fell ${Math.abs(top.deltaPp).toFixed(0)} percentage points (baseline ${(top.baselinePassRate * 100).toFixed(0)}% → latest ${(top.latestPassRate * 100).toFixed(0)}%)${dropped.length > 1 ? ` and ${dropped.length - 1} other metric${dropped.length === 2 ? '' : 's'} dropped too` : ''}. The pattern doesn\'t cleanly match a known failure mode, so investigate case-by-case.`,
+    description: `${top.label} fell ${Math.abs(top.deltaPp).toFixed(0)} percentage points (baseline ${(top.baselinePassRate * 100).toFixed(0)}% → latest ${(top.latestPassRate * 100).toFixed(0)}%)${dropped.length > 1 ? ` and ${dropped.length - 1} other metric${dropped.length === 2 ? '' : 's'} dropped too` : ''}. The pattern doesn't cleanly match a known failure mode, so investigate case-by-case.`,
     suggestedActions: [
       'Open the Latest vs prior run diff above to see which specific cases regressed.',
       'Check the Top error reasons card below — recurring error strings often point at the cause.',

@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/MCSTranscriptViewer"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -10,7 +10,18 @@ updates:
     labels:
       - "dependencies"
     commit-message:
-      prefix: "deps"
+      prefix: "deps(mcstranscriptviewer)"
+
+  - package-ecosystem: "npm"
+    directory: "/AgentEvalsViewer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps(agentevalsviewer)"
 
   - package-ecosystem: "github-actions"
     directory: "/"

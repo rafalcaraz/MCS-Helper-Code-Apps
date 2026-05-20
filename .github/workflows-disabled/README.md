@@ -2,48 +2,43 @@
 
 These workflow files were copied wholesale from the original
 [`rafalcaraz/MCSTranscriptViewer`](https://github.com/rafalcaraz/MCSTranscriptViewer)
-repo when it was folded into this monorepo. They are **intentionally inactive**
-— GitHub Actions only scans `.github/workflows/*.yml`, so anything in this
-folder will never run.
+repo when it was folded into this monorepo. Anything left in this folder is
+**intentionally inactive** — GitHub Actions only scans `.github/workflows/*.yml`,
+so files here will never run.
 
-> `release.yml` is no longer parked — it's been refactored for the shared
-> `MCSHelperCodeApps` solution and lives at [`.github/workflows/release.yml`](../workflows/release.yml).
+> Most of the originally-parked workflows have now been re-enabled as per-app
+> workflows in [`.github/workflows/`](../workflows/). What remains here is just
+> what's still waiting on dependencies before it can be wired in.
 
-## Why parked?
+## What's still parked
 
-In the source repo, these workflows assumed a single-app layout (run from the
-repo root). To live in `.github/workflows/` here they need:
+| File       | Why it's still here                                                         |
+|------------|-----------------------------------------------------------------------------|
+| `e2e.yml`  | Playwright e2e only exists for `MCSTranscriptViewer`, and the saved auth state expires (typically 24h to a few weeks). Activating it requires per-app refactor *plus* a refresh process for the `PW_AUTH_*` secrets — see the file header for the dance. |
 
-- `defaults.run.working-directory: <app>` (or per-step) — each is per-app
-- `on.push.paths: ['<app>/**', '.github/workflows/<app>-*.yml']`
-  so the other app's changes don't trigger them
-- Renaming to `<app>-<purpose>.yml` for clarity once there are several
-  per-app workflows side-by-side
+## Already re-activated
 
-`dependabot.yml` is here for the same reason — it has to live at exactly
-`.github/dependabot.yml` to be active, and the version in the source repo only
-watched a single root `package.json`. Replacement should enumerate both
-`/AgentEvalsViewer` and `/MCSTranscriptViewer`.
+For reference, these were moved out and refactored for the monorepo:
 
-## What's here
+| Originally parked | Now active as                                                                                                       |
+|-------------------|---------------------------------------------------------------------------------------------------------------------|
+| `ci.yml`          | [`mcstranscriptviewer-ci.yml`](../workflows/mcstranscriptviewer-ci.yml), [`agentevalsviewer-ci.yml`](../workflows/agentevalsviewer-ci.yml) |
+| `codeql.yml`      | [`mcstranscriptviewer-codeql.yml`](../workflows/mcstranscriptviewer-codeql.yml), [`agentevalsviewer-codeql.yml`](../workflows/agentevalsviewer-codeql.yml) |
+| `dependabot.yml`  | [`.github/dependabot.yml`](../dependabot.yml) (enumerates both apps + github-actions)                                |
 
-| File             | Purpose in source repo                                  |
-|------------------|---------------------------------------------------------|
-| `ci.yml`         | Lint + Vitest on push/PR                                |
-| `e2e.yml`        | Playwright e2e (smoke / stress / rbac) on schedule + PR |
-| `codeql.yml`     | CodeQL security analysis                                |
-| `dependabot.yml` | npm dependency updates                                  |
+## Activating what's left
 
-## Activating
+When ready to wire `e2e.yml` in:
 
-When ready to wire them in:
-
-1. Refactor for monorepo (path filters + working-directory + per-app name).
-2. Move (or rename + copy) the `.yml` into `.github/workflows/`.
-3. For `dependabot.yml`, replace with a new `.github/dependabot.yml` that
-   lists both apps under `package-ecosystem: npm`.
+1. Refactor for monorepo: add `defaults.run.working-directory: MCSTranscriptViewer`,
+   `on.push.paths: ['MCSTranscriptViewer/**', '.github/workflows/mcstranscriptviewer-e2e.yml']`,
+   and a `cache-dependency-path: MCSTranscriptViewer/package-lock.json` on
+   `setup-node`.
+2. Rename to `mcstranscriptviewer-e2e.yml` and move into `.github/workflows/`.
+3. Refresh the `PW_AUTH_ADMIN`, `PW_AUTH_LIMITED`, and `PW_E2E_ENV` secrets
+   (see the workflow header for the exact commands).
 4. Delete the parked copy from this folder.
 
-The just-activated `release.yml` is intentionally **shared** (not per-app)
-because the underlying Dataverse solution is shared — see its
-[workflow file](../workflows/release.yml) for the pattern.
+The shared `release.yml` is intentionally **not** per-app because the
+underlying Dataverse solution is shared — see
+[its workflow file](../workflows/release.yml) for the pattern.

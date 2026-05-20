@@ -1,21 +1,25 @@
-name: CI
+name: MCSTranscriptViewer CI
 
 on:
   push:
     branches: [main, Dev]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+    paths:
+      - 'MCSTranscriptViewer/**'
+      - '.github/workflows/mcstranscriptviewer-ci.yml'
   pull_request:
     branches: [main, Dev]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+    paths:
+      - 'MCSTranscriptViewer/**'
+      - '.github/workflows/mcstranscriptviewer-ci.yml'
 
 # Cancel in-progress runs when a new commit is pushed to the same branch
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: MCSTranscriptViewer
 
 jobs:
   build:
@@ -32,6 +36,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: MCSTranscriptViewer/package-lock.json
 
       - name: Install dependencies
         run: npm ci
