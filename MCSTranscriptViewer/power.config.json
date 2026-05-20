@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "appId": "d45139e0-5b92-47ac-b19b-67ee86a4f10c",
+  "appDisplayName": "MCS Conversation Viewer",
+  "region": "prod",
+  "environmentId": "92ac575f-d43d-e38d-80a0-d70cec823715",
+  "description": "",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {
+    "829af65b-5e0a-4325-8038-e77b7acf1bd8": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+      "displayName": "Logic flows",
+      "dataSources": [
+        "get_agents"
+      ],
+      "workflowDetails": {
+        "workflowEntityId": "012424bf-bf3e-f111-88b5-000d3a34206e",
+        "workflowDisplayName": "Get-Agents",
+        "workflowName": "bda2df2b-763c-7573-aff3-c0cf855029dc"
+      }
+    },
+    "89275279-3701-436c-a344-20dbb0387349": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+      "displayName": "Logic flows",
+      "dataSources": [
+        "get_transcripts"
+      ],
+      "workflowDetails": {
+        "workflowEntityId": "3584687a-c03e-f111-88b5-000d3a34206e",
+        "workflowDisplayName": "Get-Transcripts",
+        "workflowName": "2944b2e1-51b6-1603-b8c2-d6f2d5ab9b49"
+      }
+    },
+    "0b437314-d949-487b-b30b-d475b9cd25eb": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_office365users",
+      "displayName": "Office 365 Users",
+      "dataSources": [
+        "office365users"
+      ],
+      "dataSets": {},
+      "xrmConnectionReferenceLogicalName": "msftcsa_MCSConvoViewerO365Users"
+    }
+  },
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "conversationtranscripts": {
+          "entitySetName": "conversationtranscripts",
+          "logicalName": "conversationtranscript"
+        },
+        "microsoftentraids": {
+          "entitySetName": "aadusers",
+          "logicalName": "aaduser"
+        },
+        "agents": {
+          "entitySetName": "bots",
+          "logicalName": "bot"
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
+}

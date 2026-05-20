@@ -1,0 +1,221 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "msftcsa_MCSConvoViewerDataverse"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerAppV2",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "title": "envUrl",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "description": "Please enter your input",
+                  "x-ms-content-hint": "TEXT"
+                },
+                "text_1": {
+                  "description": "Please enter your input",
+                  "title": "userEmail",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "9505766d-ff2c-4509-835b-c69781387733"
+          }
+        }
+      },
+      "actions": {
+        "Respond_to_a_Power_App_or_flow": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "valuejson": {
+                  "title": "valueJson",
+                  "x-ms-dynamically-added": true,
+                  "type": "string"
+                },
+                "count": {
+                  "title": "count",
+                  "x-ms-dynamically-added": true,
+                  "type": "number"
+                },
+                "errordetails": {
+                  "title": "errorDetails",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "valuejson": "@{if(equals(variables('errorDetails'),''),string(outputs('Compose')),'')}",
+              "count": "@if(equals(variables('errorDetails'),''), length(outputs('Compose')),-1)",
+              "errordetails": "@{variables('errorDetails')}"
+            }
+          },
+          "runAfter": {
+            "Set_variable": [
+              "Succeeded",
+              "Skipped"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "2fc300ea-6b58-4fc5-9d8f-c47fea802b96"
+          }
+        },
+        "Init_var_-_errorDetails": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "errorDetails",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Try": {
+          "type": "Scope",
+          "actions": {
+            "Get-Agents-POA": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "organization": "@triggerBody()?['text']",
+                  "entityName": "principalobjectaccessset",
+                  "fetchXml": "<fetch>\n  <entity name=\"principalobjectaccess\">\n    <link-entity name=\"systemuser\" from=\"systemuserid\" to=\"principalid\">\n      <filter>\n        <condition attribute=\"internalemailaddress\" operator=\"eq\" value=\"@{triggerBody()?['text_1']}\" />\n      </filter>\n    </link-entity>\n    <link-entity name=\"bot\" from=\"botid\" to=\"objectid\" alias=\"botinfo\">\n      <attribute name=\"botid\" />\n      <attribute name=\"name\" />\n      <attribute name=\"schemaname\" />\n    </link-entity>\n  </entity>\n</fetch>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecordsWithOrganization",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              }
+            },
+            "Get-Agents-Owner": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "organization": "@triggerBody()?['text']",
+                  "entityName": "bots",
+                  "fetchXml": "<fetch>\n   <entity name=\"bot\">\n     <attribute name=\"botid\" />\n     <attribute name=\"name\" />\n     <attribute name=\"schemaname\" />\n     <link-entity name=\"systemuser\" from=\"systemuserid\" to=\"ownerid\" alias=\"o\">\n       <filter>\n         <condition attribute=\"internalemailaddress\" operator=\"eq\"\n           value=\"@{triggerBody()?['text_1']}\" />\n         <condition attribute=\"isdisabled\" operator=\"eq\" value=\"false\" />\n       </filter>\n     </link-entity>\n   </entity>\n </fetch>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecordsWithOrganization",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "runAfter": {
+                "Get-Agents-POA": [
+                  "SUCCEEDED"
+                ]
+              }
+            },
+            "Select-Agents-POA": {
+              "type": "Select",
+              "inputs": {
+                "from": "@outputs('Get-Agents-POA')?['body/value']",
+                "select": {
+                  "botid": "@item()?['botinfo.botid']",
+                  "name": "@item()?['botinfo.name']",
+                  "schemaname": "@item()?['botinfo.schemaname']"
+                }
+              },
+              "runAfter": {
+                "Get-Agents-Owner": [
+                  "SUCCEEDED"
+                ]
+              }
+            },
+            "Select-Agents-Owner": {
+              "type": "Select",
+              "inputs": {
+                "from": "@outputs('Get-Agents-Owner')?['body/value']",
+                "select": {
+                  "botid": "@item()?['botid']",
+                  "name": "@item()?['name']",
+                  "schemaname": "@item()?['schemaname']"
+                }
+              },
+              "runAfter": {
+                "Select-Agents-POA": [
+                  "SUCCEEDED"
+                ]
+              }
+            },
+            "Compose": {
+              "type": "Compose",
+              "inputs": "@union(body('Select-Agents-Owner'),body('Select-Agents-POA'))",
+              "runAfter": {
+                "Select-Agents-Owner": [
+                  "SUCCEEDED"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Init_var_-_errorDetails": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_variable": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "errorDetails",
+            "value": "@string(outputs('Get-Agents-POA'))"
+          },
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
