@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-// Build the React Code App and pack it into an unmanaged solution zip.
+// Build all Code Apps in the monorepo and pack them into a single solution zip.
 //
-// Steps:
-//   1. npm run build              -> produces my-app/dist/
-//   2. clear + copy dist/*        -> solution/src/CanvasApps/<APP>_CodeAppPackages/
-//   3. regenerate <CodeAppPackageUris> in <APP>.meta.xml to match the bundle's
-//      content-hashed filenames
-//   4. pac solution pack          -> solution/out/<SOLUTION>.zip (Unmanaged)
+// Steps (for each app in APPS):
+//   1. npm --prefix <folder> run build        -> produces <folder>/dist/
+//   2. clear + copy dist/*                    -> solution/src/CanvasApps/<app>_CodeAppPackages/
+//   3. regenerate <CodeAppPackageUris>        -> solution/src/CanvasApps/<app>.meta.xml
+// Then:
+//   4. pac solution pack                      -> solution/out/<SOLUTION>.zip
 //
 // Output zip is self-contained: a contributor can clone, run this, import the
-// zip, wire the connection reference + turn on the flows, and have a working
-// app — no `npm install` or `power-apps push` required on their end.
+// zip, wire the connection references + turn on the flows, and have all apps
+// working — no `npm install` or `power-apps push` required on their end.
 
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync, mkdirSync, cpSync } from "node:fs";
@@ -21,8 +21,14 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
 
-const APP_NAME = "msftcsa_mcsconversationviewer_6ae15";
-const SOLUTION_NAME = "ConvTranscriptViewerCodeApps";
+const SOLUTION_NAME = "MCSHelperCodeApps";
+
+// Each app in the shared solution. Keep in sync with pull-solution.mjs and
+// with the <RootComponent> entries in solution/src/Other/Solution.xml.
+const APPS = [
+  { folder: "MCSTranscriptViewer", appName: "msftcsa_mcsconversationviewer_6ae15" },
+  { folder: "AgentEvalsViewer",    appName: "msftcsa_agentevaluationsviewer_dd752" },
+];
 
 // CLI: --managed (default: unmanaged)
 const args = process.argv.slice(2);
@@ -34,11 +40,8 @@ const pad = (n) => String(n).padStart(2, "0");
 const stamp = `${pad(now.getMonth() + 1)}${pad(now.getDate())}${String(now.getFullYear()).slice(-2)}_${pad(now.getHours())}${pad(now.getMinutes())}`;
 const zipName = `${SOLUTION_NAME}_${packageType.toLowerCase()}_${stamp}.zip`;
 
-const distDir = path.join(repoRoot, "dist");
 const solutionSrc = path.join(repoRoot, "solution", "src");
 const solutionOut = path.join(repoRoot, "solution", "out");
-const bundleDir = path.join(solutionSrc, "CanvasApps", `${APP_NAME}_CodeAppPackages`);
-const metaXmlPath = path.join(solutionSrc, "CanvasApps", `${APP_NAME}.meta.xml`);
 const zipPath = path.join(solutionOut, zipName);
 
 const MIME_BY_EXT = {
@@ -88,7 +91,7 @@ function mimeFor(file) {
   return mime;
 }
 
-async function regenerateMetaXml() {
+async function regenerateMetaXml(appName, bundleDir, metaXmlPath) {
   const files = await walk(bundleDir);
   // Stable order: index.html first, then alphabetised — matches Power Apps
   // export ordering closely enough for clean diffs.
@@ -103,7 +106,7 @@ async function regenerateMetaXml() {
   const uriLines = rels
     .map(
       (rel) =>
-        `    <CodeAppPackageUri>/CanvasApps/${APP_NAME}_CodeAppPackages/${rel}_ContentType_${mimeFor(rel)}</CodeAppPackageUri>`,
+        `    <CodeAppPackageUri>/CanvasApps/${appName}_CodeAppPackages/${rel}_ContentType_${mimeFor(rel)}</CodeAppPackageUri>`,
     )
     .join("\n");
 
@@ -125,21 +128,32 @@ async function regenerateMetaXml() {
   console.log(`  ✓ rewrote ${rels.length} <CodeAppPackageUri> entries`);
 }
 
-async function main() {
-  log("Building Code App (npm run build)");
-  run("npm run build");
+async function buildAndBundle({ folder, appName }) {
+  const appRoot = path.join(repoRoot, folder);
+  const distDir = path.join(appRoot, "dist");
+  const bundleDir = path.join(solutionSrc, "CanvasApps", `${appName}_CodeAppPackages`);
+  const metaXmlPath = path.join(solutionSrc, "CanvasApps", `${appName}.meta.xml`);
+
+  log(`[${folder}] Building Code App (npm run build)`);
+  run(`npm --prefix "${folder}" run build`);
 
   await stat(distDir).catch(() => {
     throw new Error(`dist/ not found at ${distDir} after build`);
   });
 
-  log(`Refreshing bundle in ${path.relative(repoRoot, bundleDir)}`);
+  log(`[${folder}] Refreshing bundle in ${path.relative(repoRoot, bundleDir).split(path.sep).join("/")}`);
   rmSync(bundleDir, { recursive: true, force: true });
   mkdirSync(bundleDir, { recursive: true });
   cpSync(distDir, bundleDir, { recursive: true });
 
-  log("Regenerating <CodeAppPackageUris> in meta.xml");
-  await regenerateMetaXml();
+  log(`[${folder}] Regenerating <CodeAppPackageUris> in ${path.basename(metaXmlPath)}`);
+  await regenerateMetaXml(appName, bundleDir, metaXmlPath);
+}
+
+async function main() {
+  for (const app of APPS) {
+    await buildAndBundle(app);
+  }
 
   log(`Packing ${packageType.toLowerCase()} solution`);
   mkdirSync(solutionOut, { recursive: true });
@@ -176,7 +190,7 @@ async function main() {
 
   log("Done");
   console.log(`  📦 ${relZip}`);
-  console.log(`\nNext: import the zip into a Dataverse env, wire the connection reference, turn on the flows.`);
+  console.log(`\nNext: import the zip into a Dataverse env, wire the connection references, turn on the flows.`);
 }
 
 main().catch((err) => {
