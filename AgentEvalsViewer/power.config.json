@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "appId": null,
+  "appDisplayName": "Agent Evaluations Viewer",
+  "region": "prod",
+  "environmentId": "eb2d8ba3-28a6-efa4-8878-509c60c9fe1a",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {
+    "ae35d24d-4dd6-42a8-a666-0ffc0024da73": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_microsoftcopilotstudio",
+      "displayName": "Microsoft Copilot Studio",
+      "dataSources": [
+        "microsoftcopilotstudio"
+      ],
+      "dataSets": {}
+    },
+    "e98a9159-207e-498c-862c-cd3094ea9da5": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+      "displayName": "Microsoft Dataverse",
+      "dataSources": [
+        "commondataserviceforapps"
+      ],
+      "dataSets": {}
+    }
+  },
+  "databaseReferences": {}
+}

@@ -1,0 +1,30 @@
+# Monorepo-level ignores. Each app folder also has its own .gitignore
+# for app-specific build output (node_modules, dist, etc).
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment secrets — never commit
+.env
+.env.local
+.env.*.local
+
+# Local pac/Copilot Studio scratch
+tmp-pac-test/
+
+# Build / dependency artifacts at the root (apps each ignore their own)
+node_modules/
+dist/
