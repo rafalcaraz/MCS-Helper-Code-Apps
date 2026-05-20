@@ -53,19 +53,25 @@ MCS-Helper-Code-Apps/
 ├── MCSTranscriptViewer/        # Conversation transcript viewer (Power Apps Code App)
 │   ├── docs/                   # BACKLOG, KNOWLEDGE, TRANSCRIPT-PATTERNS deep references
 │   ├── e2e/                    # Playwright suites
-│   ├── scripts/                # solution pack/pull/CI auth helpers
-│   ├── solution/               # Paired Power Platform solution (custom actions + flows)
+│   ├── scripts/                # App-local helpers (e2e CI auth encoding)
 │   └── ...                     # src, public, configs
+├── solution/                   # Shared Power Platform solution — both apps ship together
+│   │                           # as MCSHelperCodeApps. See solution/README.md.
+│   ├── src/                    # Unpacked solution (flows, customizations, code app stubs)
+│   └── out/                    # (gitignored) Packed solution zips
+├── scripts/                    # Shared solution tooling
+│   ├── pack-solution.mjs       # Builds both apps + packs the shared solution zip
+│   └── pull-solution.mjs       # Re-syncs solution/src/ from Dataverse
 ├── .github/
-│   └── workflows-disabled/     # Workflows imported from MCSTranscriptViewer, parked
-│                               # here until they're refactored to be path-filtered and
-│                               # working-directory-scoped for monorepo use. GitHub Actions
-│                               # only scans .github/workflows/, so these are inert.
+│   ├── workflows/              # Active workflows (release.yml for the shared solution)
+│   └── workflows-disabled/     # Per-app CI/E2E/CodeQL/Dependabot — parked pending
+│                               # monorepo refactor. GitHub Actions only scans
+│                               # .github/workflows/, so these are inert.
 ├── README.md                   # ← you are here
 └── .gitignore                  # Monorepo defaults
 ```
 
-Each app folder is fully self-contained — its own `package.json`, `power.config.json`, `node_modules/`, build output, and README. There is intentionally **no root-level `package.json`** today; if cross-app shared code becomes valuable, we'll add a workspace then.
+Each app folder is self-contained for development — its own `package.json`, `power.config.json`, `node_modules/`, build output, and README. The **`solution/` and `scripts/` folders at the root are shared** between apps because the Dataverse solution (`MCSHelperCodeApps`) wraps both code apps as one releasable unit. There is intentionally **no root-level `package.json`** — the shared scripts are run via `node scripts/<name>.mjs` directly; if cross-app shared *code* becomes valuable, we'll add a workspace then.
 
 ## Getting started with an app
 
@@ -77,7 +83,15 @@ npm install
 npm run dev
 ```
 
-For Power Apps deployment instructions, see the individual app's README.
+For Power Apps deployment instructions, see the individual app's README and the [shared `solution/README.md`](./solution/README.md).
+
+## Shared solution
+
+Both apps are packaged into a single Power Platform solution, `MCSHelperCodeApps`, and released together. See [`solution/README.md`](./solution/README.md) for:
+
+- How to pull cloud changes back into git (`node scripts/pull-solution.mjs`)
+- How to build a self-contained release zip from source (`node scripts/pack-solution.mjs [--managed]`)
+- How the [release workflow](./.github/workflows/release.yml) ships managed zips to GitHub Releases
 
 ## Contributing / philosophy
 

@@ -6,7 +6,7 @@ on:
       solution_name:
         description: 'Solution name in Dataverse'
         required: true
-        default: 'ConvTranscriptViewerCodeApps'
+        default: 'MCSHelperCodeApps'
         type: string
 
 concurrency:
@@ -23,25 +23,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect app version from source
-        id: appversion
+      - name: Detect solution version from Solution.xml
+        id: solutionversion
         shell: bash
         run: |
-          VERSION=$(sed -n 's/.*app-version">v\([^<]*\).*/\1/p' src/App.tsx)
+          # Reads <Version>1.2.3.4</Version> from the shared solution manifest.
+          # This is the source of truth — it's bumped in the maker portal and
+          # pulled into git via `node scripts/pull-solution.mjs`.
+          VERSION=$(sed -n 's|.*<Version>\([^<]*\)</Version>.*|\1|p' solution/src/Other/Solution.xml | head -n1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not extract <Version> from solution/src/Other/Solution.xml"
+            exit 1
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Detected app version: $VERSION"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build app
-        run: npm run build
+          echo "Detected solution version: $VERSION"
 
       - name: Install Power Platform CLI
         uses: microsoft/powerplatform-actions/actions-install@v1
@@ -56,24 +51,30 @@ jobs:
         shell: pwsh
         run: |
           $pac = $env:POWERPLATFORMTOOLS_PACPATH
-          & $pac solution export --name ${{ inputs.solution_name }} --path "${{ github.workspace }}\${{ inputs.solution_name }}_v${{ steps.appversion.outputs.version }}_managed.zip" --managed --environment ${{ secrets.PAC_ENVIRONMENT_ID }}
+          & $pac solution export --name ${{ inputs.solution_name }} --path "${{ github.workspace }}\${{ inputs.solution_name }}_v${{ steps.solutionversion.outputs.version }}_managed.zip" --managed --environment ${{ secrets.PAC_ENVIRONMENT_ID }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.appversion.outputs.version }}
-          name: MCS Conversation Viewer v${{ steps.appversion.outputs.version }}
+          tag_name: v${{ steps.solutionversion.outputs.version }}
+          name: MCS Helper Code Apps v${{ steps.solutionversion.outputs.version }}
           body: |
-            ## MCS Conversation Viewer v${{ steps.appversion.outputs.version }}
+            ## MCS Helper Code Apps v${{ steps.solutionversion.outputs.version }}
+
+            Shared Power Platform solution containing all Code Apps in this monorepo:
+
+            - **MCS Transcript Viewer** — conversation transcript debugger
+            - **Agent Evaluations Viewer** — eval-runs trend dashboard
 
             ### Installation
             1. Download the managed solution `.zip` below
             2. Import it into your Power Platform environment via [make.powerapps.com](https://make.powerapps.com) → Solutions → Import
+            3. Wire the connection references and turn on the bundled flows
 
             ### Prerequisites
             - Power Platform environment with **Code Apps enabled** in environment settings
             - Copilot Studio agents deployed in the environment
           files: |
-            ${{ github.workspace }}/${{ inputs.solution_name }}_v${{ steps.appversion.outputs.version }}_managed.zip
+            ${{ github.workspace }}/${{ inputs.solution_name }}_v${{ steps.solutionversion.outputs.version }}_managed.zip
           draft: false
           prerelease: false

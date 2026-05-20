@@ -24,9 +24,6 @@
     "e2e:failed": "playwright test --last-failed",
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report",
-    "solution:pack": "node scripts/pack-solution.mjs",
-    "solution:pack:managed": "node scripts/pack-solution.mjs --managed",
-    "solution:pull": "node scripts/pull-solution.mjs",
     "ci:encode-auth": "node scripts/encode-auth-for-ci.mjs"
   },
   "dependencies": {

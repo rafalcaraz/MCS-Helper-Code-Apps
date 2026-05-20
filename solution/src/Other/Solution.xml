@@ -1,23 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.26034.189" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26034.189" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26034.00189">
+<ImportExportXml version="9.2.26042.168" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26042.168" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26042.00168">
   <SolutionManifest>
-    <UniqueName>ConvTranscriptViewerCodeApps</UniqueName>
+    <UniqueName>MCSHelperCodeApps</UniqueName>
     <LocalizedNames>
-      <LocalizedName description="Conv Transcript Viewer - CodeApps" languagecode="1033" />
+      <LocalizedName description="MCS Helper Code Apps" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.9</Version>
+    <Version>1.0.0.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>MicrosoftCSA</UniqueName>
       <LocalizedNames>
-        <LocalizedName description="Microsoft CSA" languagecode="1033" />
+        <LocalizedName description="MicrosoftCSA" languagecode="1033" />
       </LocalizedNames>
-      <Descriptions />
+      <Descriptions>
+        <Description description="MicrosoftCSA" languagecode="1033" />
+      </Descriptions>
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
       <CustomizationPrefix>msftcsa</CustomizationPrefix>
-      <CustomizationOptionValuePrefix>32173</CustomizationOptionValuePrefix>
+      <CustomizationOptionValuePrefix>93767</CustomizationOptionValuePrefix>
       <Addresses>
         <Address>
           <AddressNumber>1</AddressNumber>
@@ -80,6 +82,7 @@
     <RootComponents>
       <RootComponent type="29" id="{012424bf-bf3e-f111-88b5-000d3a34206e}" behavior="0" />
       <RootComponent type="29" id="{3584687a-c03e-f111-88b5-000d3a34206e}" behavior="0" />
+      <RootComponent type="300" schemaName="msftcsa_agentevaluationsviewer_dd752" behavior="0" />
       <RootComponent type="300" schemaName="msftcsa_mcsconversationviewer_6ae15" behavior="0" />
     </RootComponents>
     <MissingDependencies>
@@ -90,28 +93,36 @@
         <Dependent type="300" schemaName="msftcsa_mcsconversationviewer_6ae15" displayName="MCS Conversation Viewer" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="1" schemaName="bot" displayName="Agent" solution="PowerVirtualAgents (2026.3.2.19372844)">
-          <package appName="CCI Bots" version="2026.3.2.19372844">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.2.19372844)</package>
+        <Required type="1" schemaName="bot" displayName="Agent" solution="PowerVirtualAgents (2026.3.4.19448250)">
+          <package appName="CCI Bots" version="2026.3.4.19448250">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.4.19448250)</package>
         </Required>
         <Dependent type="29" displayName="Get-Agents" id="{012424bf-bf3e-f111-88b5-000d3a34206e}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="1" schemaName="bot" displayName="Agent" solution="PowerVirtualAgents (2026.3.2.19372844)">
-          <package appName="CCI Bots" version="2026.3.2.19372844">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.2.19372844)</package>
+        <Required type="1" schemaName="bot" displayName="Agent" solution="PowerVirtualAgents (2026.3.4.19448250)">
+          <package appName="CCI Bots" version="2026.3.4.19448250">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.4.19448250)</package>
         </Required>
         <Dependent type="300" schemaName="msftcsa_mcsconversationviewer_6ae15" displayName="MCS Conversation Viewer" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="1" schemaName="conversationtranscript" displayName="ConversationTranscript" solution="PowerVirtualAgentsCommon (2026.3.2.19372844)">
-          <package appName="CCI Bots" version="2026.3.2.19372844">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.2.19372844)</package>
+        <Required type="1" schemaName="conversationtranscript" displayName="ConversationTranscript" solution="PowerVirtualAgentsCommon (2026.3.4.19448250)">
+          <package appName="CCI Bots" version="2026.3.4.19448250">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.4.19448250)</package>
         </Required>
         <Dependent type="29" displayName="Get-Transcripts" id="{3584687a-c03e-f111-88b5-000d3a34206e}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="1" schemaName="conversationtranscript" displayName="ConversationTranscript" solution="PowerVirtualAgentsCommon (2026.3.2.19372844)">
-          <package appName="CCI Bots" version="2026.3.2.19372844">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.2.19372844)</package>
+        <Required type="1" schemaName="conversationtranscript" displayName="ConversationTranscript" solution="PowerVirtualAgentsCommon (2026.3.4.19448250)">
+          <package appName="CCI Bots" version="2026.3.4.19448250">msdynce_CustomerCareIntelligenceBots_Anchor (2026.3.4.19448250)</package>
         </Required>
         <Dependent type="300" schemaName="msftcsa_mcsconversationviewer_6ae15" displayName="MCS Conversation Viewer" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="msftcsa_MCSConvoViewerDataverse" solution="Active" id.connectionreferencelogicalname="msftcsa_MCSConvoViewerDataverse" />
+        <Dependent type="29" displayName="Get-Agents" id="{012424bf-bf3e-f111-88b5-000d3a34206e}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="msftcsa_MCSConvoViewerDataverse" solution="Active" id.connectionreferencelogicalname="msftcsa_MCSConvoViewerDataverse" />
+        <Dependent type="29" displayName="Get-Transcripts" id="{3584687a-c03e-f111-88b5-000d3a34206e}" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>
