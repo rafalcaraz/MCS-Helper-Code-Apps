@@ -43,11 +43,8 @@ import {
   summarizeAgentHealth,
   type AgentLandingCardInsight,
 } from '../lib/metrics'
-import {
-  useAllLastViewedRuns,
-  getMarkerRunIdFor,
-} from '../hooks/useLastViewedRun'
-import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAllLastViewedRuns, getMarkerRunIdFor } from '../hooks/useLastViewedRun'
+import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
 import type { TestRun, TestSet } from '../generated/models/MicrosoftCopilotStudioModel'
 
 const useStyles = makeStyles({
@@ -212,8 +209,8 @@ export function AgentDetailPage() {
   const styles = useStyles()
   const navigate = useNavigate()
   const { agentId } = useParams<{ agentId: string }>()
-  const { getAgent } = useTrackedAgents()
-  const tracked = agentId ? getAgent(agentId) : undefined
+  const { name: agentDisplayName, resolved: agentNameResolved } =
+    useAgentDisplayName(agentId)
 
   const testSetsQuery = useTestSets(agentId)
   const runsQuery = useTestRunsWithDetails(agentId)
@@ -294,11 +291,11 @@ export function AgentDetailPage() {
           Agents
         </RouterLink>
         <ChevronRight20Regular />
-        <span>{tracked?.nickname ?? agentId}</span>
+        <span>{agentDisplayName || agentId}</span>
       </div>
       <div className={styles.titleRow}>
         <div>
-          <Title2>{tracked?.nickname ?? 'Agent'}</Title2>
+          <Title2>{agentNameResolved ? agentDisplayName : 'Agent'}</Title2>
           <div style={{ display: 'flex', alignItems: 'center', columnGap: 4 }}>
             <Caption1 className={styles.agentMeta}>{agentId}</Caption1>
             <CopyIdButton value={agentId} noun="agent ID" iconOnly />

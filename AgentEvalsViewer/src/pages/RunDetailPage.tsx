@@ -34,7 +34,7 @@ import { OwnerDisplayBlock } from '../components/OwnerDisplay'
 import { RawJson } from '../components/RawJson'
 import { RegressionTriagePanel } from '../components/RegressionTriagePanel'
 import { TopFailingToolsCard } from '../components/TopFailingToolsCard'
-import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
 import {
   formatDateTime,
   formatDuration,
@@ -167,8 +167,7 @@ export function RunDetailPage() {
     agentId: string
     runId: string
   }>()
-  const { getAgent } = useTrackedAgents()
-  const tracked = agentId ? getAgent(agentId) : undefined
+  const { name: agentDisplayName } = useAgentDisplayName(agentId)
   const [compositeMode, setCompositeMode] =
     useState<CompositeMode>('strict')
 
@@ -231,7 +230,7 @@ export function RunDetailPage() {
           to={`/agents/${agentId}`}
           className={styles.crumbLink}
         >
-          {tracked?.nickname ?? agentId}
+          {agentDisplayName || agentId}
         </RouterLink>
         {run.testSetId ? (
           <>

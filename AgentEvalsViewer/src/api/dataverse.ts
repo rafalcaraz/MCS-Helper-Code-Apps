@@ -503,3 +503,102 @@ export async function fetchUsersByIds(
 
   return out
 }
+
+// ---- bots lookup (discover agents the user has access to) ----
+
+/**
+ * One row from the Dataverse `bots` table, narrowed to just the fields
+ * we care about for picker/display use. Mirrors the same shape
+ * `MCSTranscriptViewer` exposes, so detail pages can resolve a friendly
+ * name without poking around in typed connector models.
+ */
+export interface BotInfo {
+  botId: string
+  displayName: string
+  schemaName: string
+}
+
+interface BotRow {
+  botid?: string
+  name?: string
+  schemaname?: string
+}
+
+interface BotsResponse {
+  value?: BotRow[]
+  '@odata.nextLink'?: string
+}
+
+/**
+ * Componentstate values we want to exclude — Deleted (2) and
+ * DeletedUnpublished (3). Source: `Botscomponentstate` enum in the
+ * MCSTranscriptViewer's generated `BotsModel.ts`.
+ */
+const BOT_COMPONENTSTATE_DELETED = 2
+const BOT_COMPONENTSTATE_DELETED_UNPUBLISHED = 3
+
+/** Statecode value for "Active" bots. */
+const BOT_STATECODE_ACTIVE = 0
+
+/**
+ * Fetch every bot row the current caller can see in this Dataverse
+ * environment. Dataverse RBAC already does the "only what they have
+ * access to" filtering for us — no extra security-role logic on the
+ * client. Returns active, non-deleted rows; sorted by display name.
+ *
+ * Reuses the existing generic Dataverse connector that the rest of
+ * this app already uses (no `power.config.json` change, no typed
+ * `BotsService`). Failures propagate to callers — react-query surfaces
+ * them and the AgentsPage shows a graceful empty-state.
+ */
+export async function fetchAccessibleBots(): Promise<BotInfo[]> {
+  const out: BotInfo[] = []
+  const organization = await getOrganizationUrl()
+  let skiptoken: string | undefined
+
+  // Pagination cap kept generous (20 pages × ~100 rows) — most envs have
+  // dozens of bots, not thousands. If we ever hit the cap the user is
+  // beyond what a discovery UI can usefully render anyway.
+  for (let page = 0; page < 20; page++) {
+    const result = await MicrosoftDataverseService.ListRecordsWithOrganization(
+      organization,
+      'bots',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      'botid,name,schemaname',
+      `statecode eq ${BOT_STATECODE_ACTIVE} ` +
+        `and componentstate ne ${BOT_COMPONENTSTATE_DELETED} ` +
+        `and componentstate ne ${BOT_COMPONENTSTATE_DELETED_UNPUBLISHED}`,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      skiptoken,
+    )
+    const data = unwrap(result) as BotsResponse
+    for (const row of data.value ?? []) {
+      if (!row.botid) continue
+      out.push({
+        botId: row.botid,
+        displayName: row.name ?? row.schemaname ?? row.botid,
+        schemaName: row.schemaname ?? '',
+      })
+    }
+    const nextLink = data['@odata.nextLink']
+    if (!nextLink) break
+    const tokenMatch = /[?&]\$skiptoken=([^&]+)/.exec(nextLink)
+    if (!tokenMatch) break
+    skiptoken = decodeURIComponent(tokenMatch[1])
+  }
+
+  // Stable alphabetical sort so the picker has a predictable order.
+  out.sort((a, b) =>
+    (a.displayName || a.schemaName).localeCompare(
+      b.displayName || b.schemaName,
+    ),
+  )
+
+  return out
+}
