@@ -10,7 +10,7 @@ import {
 } from '@fluentui/react-components'
 import { History20Regular, Open16Regular } from '@fluentui/react-icons'
 import { useRecentVisits } from '../hooks/useLastViewedRun'
-import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAgentDisplayNameResolver } from '../hooks/useAgentDisplayName'
 import { formatRelativeTime } from '../lib/eval'
 
 const useStyles = makeStyles({
@@ -101,13 +101,14 @@ export interface RecentlyViewedCardProps {
 export function RecentlyViewedCard({ limit = 6 }: RecentlyViewedCardProps) {
   const styles = useStyles()
   const visits = useRecentVisits(limit)
-  const { getAgent } = useTrackedAgents()
+  const resolveAgentName = useAgentDisplayNameResolver()
 
   const items = useMemo(() => {
     return visits.map((v) => {
-      const tracked = getAgent(v.agentId)
-      const agentName =
-        tracked?.nickname ?? v.entry.agentName ?? v.agentId.slice(0, 8) + '…'
+      const resolved = resolveAgentName(v.agentId)
+      const agentName = resolved.resolved
+        ? resolved.name
+        : v.entry.agentName ?? resolved.name
       const testSetName =
         v.entry.testSetName ?? v.testSetId.slice(0, 8) + '…'
       const runName = v.entry.runName
@@ -115,7 +116,7 @@ export function RecentlyViewedCard({ limit = 6 }: RecentlyViewedCardProps) {
       const href = `/agents/${v.agentId}/testsets/${encodeURIComponent(v.testSetId)}`
       return { ...v, agentName, testSetName, runName, relative, href }
     })
-  }, [visits, getAgent])
+  }, [visits, resolveAgentName])
 
   if (items.length === 0) return null
 

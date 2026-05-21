@@ -35,7 +35,7 @@ import { PartialResultsBanner } from '../components/PartialResultsBanner'
 import { RawJson } from '../components/RawJson'
 import { StatusPill } from '../components/StatusPill'
 import { StreakIndicator } from '../components/StreakIndicator'
-import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
 import { formatDateTime, getTestSetName } from '../lib/eval'
 import { getCpsTestSetUrl } from '../lib/cpsLinks'
 import {
@@ -233,8 +233,7 @@ export function CaseDetailPage() {
     testSetId: string
     caseId: string
   }>()
-  const { getAgent } = useTrackedAgents()
-  const tracked = agentId ? getAgent(agentId) : undefined
+  const { name: agentDisplayName } = useAgentDisplayName(agentId)
 
   const setQuery = useTestSetDetails(agentId, testSetId)
   const runsQuery = useTestRunsWithDetails(agentId, testSetId)
@@ -336,7 +335,7 @@ export function CaseDetailPage() {
             to={`/agents/${agentId}`}
             className={styles.crumbLink}
           >
-            {tracked?.nickname ?? agentId}
+            {agentDisplayName || agentId}
           </RouterLink>
           <ChevronRight20Regular />
           <RouterLink
@@ -379,7 +378,7 @@ export function CaseDetailPage() {
         </RouterLink>
         <ChevronRight20Regular />
         <RouterLink to={`/agents/${agentId}`} className={styles.crumbLink}>
-          {tracked?.nickname ?? agentId}
+          {agentDisplayName || agentId}
         </RouterLink>
         <ChevronRight20Regular />
         <RouterLink

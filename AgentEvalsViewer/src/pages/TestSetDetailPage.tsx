@@ -55,7 +55,7 @@ import { SinceLastVisitInbox } from '../components/SinceLastVisitInbox'
 import { TopErrorReasonsCard } from '../components/TopErrorReasonsCard'
 import { TopFailingToolsCard } from '../components/TopFailingToolsCard'
 import { useLastViewedRun } from '../hooks/useLastViewedRun'
-import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
 import { useAgentSnapshots } from '../hooks/useAgentSnapshots'
 import { snapshotsToChartMarkers } from '../lib/snapshotChartMarkers'
 import {
@@ -167,8 +167,8 @@ export function TestSetDetailPage() {
     agentId: string
     testSetId: string
   }>()
-  const { getAgent } = useTrackedAgents()
-  const tracked = agentId ? getAgent(agentId) : undefined
+  const { name: agentDisplayName, resolved: agentNameResolved } =
+    useAgentDisplayName(agentId)
   const [compositeMode, setCompositeMode] =
     useState<CompositeMode>('strict')
   const [showHeatmap, setShowHeatmap] = useState(false)
@@ -250,14 +250,25 @@ export function TestSetDetailPage() {
     const latestId = latest?.id
     if (!latestId) return
     if (markerRunId === latestId) return
-    const agentName = tracked?.nickname
+    // Capture the resolved agent name (tracked nickname or discovered bot
+    // display name) for the "you saw X" inbox marker. Skip when we still
+    // only have a GUID-prefix fallback so the marker doesn't lock that
+    // in — RecentlyViewedCard will resolve it later anyway.
+    const agentName = agentNameResolved ? agentDisplayName : undefined
     const testSetName = setQuery.data ? getTestSetName(setQuery.data) : undefined
     const runName = latest?.name ?? undefined
     const timer = window.setTimeout(() => {
       markAsViewed(latestId, { runName, agentName, testSetName })
     }, 4000)
     return () => window.clearTimeout(timer)
-  }, [setRuns, markerRunId, markAsViewed, tracked, setQuery.data])
+  }, [
+    setRuns,
+    markerRunId,
+    markAsViewed,
+    agentDisplayName,
+    agentNameResolved,
+    setQuery.data,
+  ])
 
   const rangeHours =
     RANGE_OPTIONS.find((o) => o.id === rangeId)?.hours ?? null
@@ -304,7 +315,7 @@ export function TestSetDetailPage() {
           to={`/agents/${agentId}`}
           className={styles.crumbLink}
         >
-          {tracked?.nickname ?? agentId}
+          {agentDisplayName || agentId}
         </RouterLink>
         <ChevronRight20Regular />
         <span>{getTestSetName(setQuery.data)}</span>

@@ -8,8 +8,10 @@ import type {
 } from '../generated/models/MicrosoftCopilotStudioModel'
 import { MicrosoftCopilotStudioService } from '../generated/services/MicrosoftCopilotStudioService'
 import {
+  fetchAccessibleBots,
   fetchTestCaseDefinitions,
   fetchUsersByIds,
+  type BotInfo,
   type CaseDefinition,
   type SystemUser,
 } from './dataverse'
@@ -238,5 +240,26 @@ export function useSystemUsers(
     gcTime: 60 * 60 * 1000,
     retry: 1,
     queryFn: async () => fetchUsersByIds(uniqueSorted),
+  })
+}
+
+/**
+ * Discover the bots the current caller has access to in this Dataverse
+ * environment. Powers the AgentsPage picker so the maker doesn't have
+ * to paste an Agent ID — Dataverse RBAC already filters the list to
+ * what they can see.
+ *
+ * Best-effort: if the caller doesn't have read on the `bots` table the
+ * query surfaces an error and the page falls back to the manual
+ * "add by ID" form. Stale-while-revalidate is long (10min) since the
+ * bots list rarely changes across an editing session.
+ */
+export function useAccessibleBots(): UseQueryResult<BotInfo[], Error> {
+  return useQuery({
+    queryKey: ['accessibleBots'],
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
+    queryFn: async () => fetchAccessibleBots(),
   })
 }

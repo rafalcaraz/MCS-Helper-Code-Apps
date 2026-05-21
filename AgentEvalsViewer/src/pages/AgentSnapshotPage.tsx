@@ -45,6 +45,7 @@ import {
   Person16Regular,
 } from '@fluentui/react-icons'
 import { useTrackedAgents } from '../hooks/useTrackedAgents'
+import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
 import { useAgentSnapshots } from '../hooks/useAgentSnapshots'
 import { useSystemUsers } from '../api/queries'
 import { OwnerDisplay } from '../components/OwnerDisplay'
@@ -325,7 +326,8 @@ export function AgentSnapshotPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { agents } = useTrackedAgents()
-  const tracked = agents.find((a) => a.agentId === agentId)
+  const { name: agentDisplayName, resolved: agentNameResolved } =
+    useAgentDisplayName(agentId)
   const {
     snapshots,
     addSnapshot,
@@ -626,7 +628,7 @@ export function AgentSnapshotPage() {
         </RouterLink>
         <ChevronRight20Regular />
         <RouterLink to={`/agents/${agentId}`} className={styles.crumbLink}>
-          {tracked?.nickname ?? agentId}
+          {agentDisplayName || agentId}
         </RouterLink>
         <ChevronRight20Regular />
         <span>Design snapshot</span>
@@ -635,7 +637,7 @@ export function AgentSnapshotPage() {
       <div>
         <Title2>Design snapshot</Title2>
         <Caption1 className={styles.meta}>
-          {tracked?.nickname ?? 'Agent'} · {agentId}
+          {agentNameResolved ? agentDisplayName : 'Agent'} · {agentId}
         </Caption1>
       </div>
 

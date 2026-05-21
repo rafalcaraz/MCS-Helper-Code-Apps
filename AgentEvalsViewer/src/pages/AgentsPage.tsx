@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Body1,
@@ -6,6 +6,11 @@ import {
   Caption1,
   Field,
   Input,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
+  Skeleton,
+  SkeletonItem,
   Subtitle1,
   Title2,
   makeStyles,
@@ -19,9 +24,11 @@ import {
   Delete20Regular,
   History16Regular,
   Open16Regular,
+  Search16Regular,
 } from '@fluentui/react-icons'
 import { useTrackedAgents } from '../hooks/useTrackedAgents'
 import { useRecentVisits } from '../hooks/useLastViewedRun'
+import { useAccessibleBots } from '../api/queries'
 import { AgentSummaryStrip } from '../components/AgentSummaryStrip'
 import { RecentlyViewedCard } from '../components/RecentlyViewedCard'
 import { RetentionBanner } from '../components/RetentionBanner'
@@ -45,6 +52,23 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusLarge,
     boxShadow: tokens.shadow4,
   },
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: tokens.spacingHorizontalS,
+    marginBottom: tokens.spacingVerticalS,
+  },
+  sectionTitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: tokens.spacingHorizontalM,
+    flexWrap: 'wrap',
+  },
+  searchField: {
+    flexGrow: 1,
+    minWidth: '240px',
+    maxWidth: '420px',
+  },
   formRow: {
     display: 'flex',
     columnGap: tokens.spacingHorizontalM,
@@ -59,6 +83,9 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     rowGap: tokens.spacingVerticalS,
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
   },
   listItem: {
     display: 'flex',
@@ -75,6 +102,16 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     minWidth: 0,
+  },
+  itemTitleRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    columnGap: tokens.spacingHorizontalS,
+    flexWrap: 'wrap',
+  },
+  itemSchema: {
+    color: tokens.colorNeutralForeground3,
+    fontFamily: tokens.fontFamilyMonospace,
   },
   itemId: {
     color: tokens.colorNeutralForeground3,
@@ -104,6 +141,20 @@ const useStyles = makeStyles({
     justifyContent: 'flex-start',
     marginTop: tokens.spacingVerticalS,
   },
+  toggleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: tokens.spacingHorizontalXS,
+  },
+  hiddenAdvanced: {
+    display: 'none',
+  },
+  emptyHint: {
+    color: tokens.colorNeutralForeground3,
+  },
+  skeletonRow: {
+    marginBlock: tokens.spacingVerticalS,
+  },
 })
 
 export function AgentsPage() {
@@ -113,7 +164,34 @@ export function AgentsPage() {
   const [agentId, setAgentId] = useState('')
   const [nickname, setNickname] = useState('')
   const [showRecentVisits, setShowRecentVisits] = useState(false)
+  const [showAddByIdForm, setShowAddByIdForm] = useState(false)
+  const [discoveredFilter, setDiscoveredFilter] = useState('')
   const recentVisits = useRecentVisits()
+  const accessibleBotsQuery = useAccessibleBots()
+
+  const discoveredBots = useMemo(
+    () => accessibleBotsQuery.data ?? [],
+    [accessibleBotsQuery.data],
+  )
+
+  // Bot IDs that the user already tracks manually — we hide those from
+  // the discovered list so they don't show up twice.
+  const trackedIds = useMemo(
+    () => new Set(agents.map((a) => a.agentId)),
+    [agents],
+  )
+
+  const filteredDiscovered = useMemo(() => {
+    const q = discoveredFilter.trim().toLowerCase()
+    const base = discoveredBots.filter((b) => !trackedIds.has(b.botId))
+    if (!q) return base
+    return base.filter(
+      (b) =>
+        b.displayName.toLowerCase().includes(q) ||
+        b.schemaName.toLowerCase().includes(q) ||
+        b.botId.toLowerCase().includes(q),
+    )
+  }, [discoveredBots, trackedIds, discoveredFilter])
 
   const handleAdd = (event: FormEvent) => {
     event.preventDefault()
@@ -121,111 +199,250 @@ export function AgentsPage() {
     addAgent({ agentId, nickname })
     setAgentId('')
     setNickname('')
+    // Keep the form open so makers adding several can keep going. They
+    // can collapse it themselves when done.
   }
+
+  const totalAgents = agents.length + discoveredBots.length
+  const isDiscoveryLoading =
+    accessibleBotsQuery.isLoading && !accessibleBotsQuery.data
+  const discoveryFailed = Boolean(accessibleBotsQuery.error)
 
   return (
     <div className={styles.root}>
       <div className={styles.headerRow}>
         <Title2>Agents</Title2>
-        <Caption1>{agents.length} tracked</Caption1>
+        <Caption1>
+          {totalAgents} {totalAgents === 1 ? 'agent' : 'agents'}
+          {agents.length > 0 ? ` (${agents.length} tracked)` : ''}
+        </Caption1>
       </div>
 
       <RetentionBanner />
 
-      <form className={styles.card} onSubmit={handleAdd}>
-        <Subtitle1>Track an agent</Subtitle1>
+      {/* ── Discovered bots: the primary way to pick an agent ───── */}
+      <div className={styles.card}>
+        <div className={styles.sectionHeader}>
+          <Subtitle1>Your agents</Subtitle1>
+        </div>
         <Body1 as="p">
-          Paste an agent ID (the <code>cdsBotId</code> GUID) from Copilot
-          Studio. You can give it a nickname to make it easier to spot in
-          your dashboard.
+          Agents you have access to in this Dataverse environment. Click
+          one to view its evaluation history — no setup required.
         </Body1>
-        <div className={styles.formRow}>
-          <Field
-            className={styles.fieldGrow}
-            label={
-              <div className={styles.idHelpRow}>
-                <span>
-                  Agent ID
-                  <span
-                    className={styles.requiredAsterisk}
-                    aria-hidden="true"
-                  >
-                    *
-                  </span>
-                </span>
-                <AgentIdHelpPopover />
-              </div>
-            }
-            required
-          >
-            <Input
-              value={agentId}
-              onChange={(_, data) => setAgentId(data.value)}
-              placeholder="00000000-0000-0000-0000-000000000000"
-            />
-          </Field>
-          <Field
-            className={styles.fieldGrow}
-            label={<div className={styles.idHelpRow}>Nickname</div>}
-          >
-            <Input
-              value={nickname}
-              onChange={(_, data) => setNickname(data.value)}
-              placeholder="HR Assistant (prod)"
-            />
-          </Field>
-          <Button
-            type="submit"
-            appearance="primary"
-            icon={<Add24Regular />}
-            disabled={!agentId.trim()}
-          >
-            Track agent
-          </Button>
-        </div>
-      </form>
 
-      {agents.length === 0 ? (
-        <div className={styles.card}>
-          <Subtitle1>No agents tracked yet</Subtitle1>
-          <Body1 as="p">
-            Add an agent above to start viewing its evaluation history.
+        {discoveryFailed ? (
+          <MessageBar intent="warning" style={{ marginTop: tokens.spacingVerticalM }}>
+            <MessageBarBody>
+              <MessageBarTitle>Couldn't load your agents</MessageBarTitle>
+              We hit an error reading the Dataverse <code>bots</code> table.
+              Check your connector permissions, or add an agent by ID below.
+            </MessageBarBody>
+          </MessageBar>
+        ) : null}
+
+        {isDiscoveryLoading ? (
+          <div className={styles.skeletonRow}>
+            <Skeleton>
+              <SkeletonItem size={16} style={{ width: '320px', marginBottom: 8 }} />
+              <SkeletonItem size={16} style={{ width: '280px', marginBottom: 8 }} />
+              <SkeletonItem size={16} style={{ width: '300px' }} />
+            </Skeleton>
+          </div>
+        ) : null}
+
+        {!isDiscoveryLoading && !discoveryFailed && discoveredBots.length === 0 ? (
+          <Body1 as="p" className={styles.emptyHint}>
+            No agents found in this environment. If you expect to see one,
+            ask the maker who owns it to grant you read access — or add it
+            manually by ID below.
           </Body1>
-        </div>
-      ) : (
-        <ul
-          className={styles.list}
-          style={{ listStyle: 'none', margin: 0, padding: 0 }}
-        >
-          {agents.map((a) => (
-            <li key={a.agentId} className={styles.listItem}>
-              <div className={styles.itemBody}>
-                <Body1>{a.nickname}</Body1>
-                <div className={styles.idRow}>
-                  <Caption1 className={styles.itemId} title={a.agentId}>
-                    {a.agentId}
-                  </Caption1>
-                  <CopyIdButton value={a.agentId} noun="agent ID" iconOnly />
+        ) : null}
+
+        {!isDiscoveryLoading && discoveredBots.length > 0 ? (
+          <>
+            <div
+              className={styles.sectionTitleRow}
+              style={{ marginBlock: tokens.spacingVerticalM }}
+            >
+              <Field className={styles.searchField}>
+                <Input
+                  contentBefore={<Search16Regular />}
+                  value={discoveredFilter}
+                  onChange={(_, data) => setDiscoveredFilter(data.value)}
+                  placeholder="Filter by name, schema, or ID…"
+                  aria-label="Filter discovered agents"
+                />
+              </Field>
+              <Caption1 className={styles.emptyHint}>
+                {filteredDiscovered.length} shown
+                {trackedIds.size > 0
+                  ? ` · ${trackedIds.size} listed under Tracked`
+                  : ''}
+              </Caption1>
+            </div>
+
+            {filteredDiscovered.length === 0 ? (
+              <Body1 as="p" className={styles.emptyHint}>
+                No agents match "{discoveredFilter}".
+              </Body1>
+            ) : (
+              <ul className={styles.list}>
+                {filteredDiscovered.map((b) => (
+                  <li key={b.botId} className={styles.listItem}>
+                    <div className={styles.itemBody}>
+                      <div className={styles.itemTitleRow}>
+                        <Body1>
+                          <strong>{b.displayName}</strong>
+                        </Body1>
+                        {b.schemaName && b.schemaName !== b.displayName ? (
+                          <Caption1 className={styles.itemSchema}>
+                            {b.schemaName}
+                          </Caption1>
+                        ) : null}
+                      </div>
+                      <div className={styles.idRow}>
+                        <Caption1 className={styles.itemId} title={b.botId}>
+                          {b.botId}
+                        </Caption1>
+                        <CopyIdButton value={b.botId} noun="agent ID" iconOnly />
+                      </div>
+                      <AgentSummaryStrip agentId={b.botId} />
+                    </div>
+                    <Button
+                      appearance="primary"
+                      icon={<Open16Regular />}
+                      onClick={() => navigate(`/agents/${b.botId}`)}
+                    >
+                      Open
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : null}
+      </div>
+
+      {/* ── Tracked agents (manual): only shows if user has any ─── */}
+      {agents.length > 0 ? (
+        <div className={styles.card}>
+          <div className={styles.sectionHeader}>
+            <Subtitle1>Tracked manually</Subtitle1>
+          </div>
+          <Body1 as="p">
+            Agents you added by ID. Useful for bots from other environments
+            or ones you've nicknamed.
+          </Body1>
+          <ul className={styles.list} style={{ marginTop: tokens.spacingVerticalM }}>
+            {agents.map((a) => (
+              <li key={a.agentId} className={styles.listItem}>
+                <div className={styles.itemBody}>
+                  <Body1>{a.nickname}</Body1>
+                  <div className={styles.idRow}>
+                    <Caption1 className={styles.itemId} title={a.agentId}>
+                      {a.agentId}
+                    </Caption1>
+                    <CopyIdButton value={a.agentId} noun="agent ID" iconOnly />
+                  </div>
+                  <AgentSummaryStrip agentId={a.agentId} />
                 </div>
-                <AgentSummaryStrip agentId={a.agentId} />
-              </div>
-              <Button
-                appearance="subtle"
-                icon={<Open16Regular />}
-                onClick={() => navigate(`/agents/${a.agentId}`)}
-              >
-                Open
-              </Button>
-              <Button
-                appearance="subtle"
-                icon={<Delete20Regular />}
-                aria-label={`Remove ${a.nickname}`}
-                onClick={() => removeAgent(a.agentId)}
+                <Button
+                  appearance="subtle"
+                  icon={<Open16Regular />}
+                  onClick={() => navigate(`/agents/${a.agentId}`)}
+                >
+                  Open
+                </Button>
+                <Button
+                  appearance="subtle"
+                  icon={<Delete20Regular />}
+                  aria-label={`Remove ${a.nickname}`}
+                  onClick={() => removeAgent(a.agentId)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* ── Add-by-ID escape hatch — collapsed by default ─────── */}
+      <div className={styles.toggleRow}>
+        <Button
+          appearance="subtle"
+          size="small"
+          icon={
+            showAddByIdForm ? (
+              <ChevronUp16Regular />
+            ) : (
+              <ChevronDown16Regular />
+            )
+          }
+          onClick={() => setShowAddByIdForm((v) => !v)}
+          title={
+            showAddByIdForm
+              ? 'Hide the add-by-ID form'
+              : 'Add an agent by ID (e.g. a bot from another environment)'
+          }
+        >
+          {showAddByIdForm ? 'Hide add-by-ID' : 'Add an agent by ID'}
+        </Button>
+      </div>
+
+      {showAddByIdForm ? (
+        <form className={styles.card} onSubmit={handleAdd}>
+          <Subtitle1>Add an agent by ID</Subtitle1>
+          <Body1 as="p">
+            For bots you can't see in the discovered list above — usually
+            because they live in a different environment or your Dataverse
+            role doesn't grant read access. Paste the <code>cdsBotId</code>{' '}
+            GUID from Copilot Studio.
+          </Body1>
+          <div className={styles.formRow}>
+            <Field
+              className={styles.fieldGrow}
+              label={
+                <div className={styles.idHelpRow}>
+                  <span>
+                    Agent ID
+                    <span
+                      className={styles.requiredAsterisk}
+                      aria-hidden="true"
+                    >
+                      *
+                    </span>
+                  </span>
+                  <AgentIdHelpPopover />
+                </div>
+              }
+              required
+            >
+              <Input
+                value={agentId}
+                onChange={(_, data) => setAgentId(data.value)}
+                placeholder="00000000-0000-0000-0000-000000000000"
               />
-            </li>
-          ))}
-        </ul>
-      )}
+            </Field>
+            <Field
+              className={styles.fieldGrow}
+              label={<div className={styles.idHelpRow}>Nickname</div>}
+            >
+              <Input
+                value={nickname}
+                onChange={(_, data) => setNickname(data.value)}
+                placeholder="HR Assistant (prod)"
+              />
+            </Field>
+            <Button
+              type="submit"
+              appearance="primary"
+              icon={<Add24Regular />}
+              disabled={!agentId.trim()}
+            >
+              Track agent
+            </Button>
+          </div>
+        </form>
+      ) : null}
 
       {recentVisits.length > 0 ? (
         <div className={styles.recentToggleRow}>
@@ -262,3 +479,4 @@ export function AgentsPage() {
     </div>
   )
 }
+
