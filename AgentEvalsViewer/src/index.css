@@ -26,13 +26,9 @@ body {
   background-color: #fafafa;
   color: #242424;
 }
-html[data-theme='dark'] body,
-html[data-theme='highContrast'] body {
+html[data-theme='dark'] body {
   background-color: #1f1f1f;
   color: #ffffff;
-}
-html[data-theme='highContrast'] body {
-  background-color: #000000;
 }
 
 /*
@@ -84,9 +80,7 @@ html[data-theme='highContrast'] body {
   font-weight: 600;
 }
 html[data-theme='dark'] .sr-only-focusable:focus,
-html[data-theme='dark'] .sr-only-focusable:focus-visible,
-html[data-theme='highContrast'] .sr-only-focusable:focus,
-html[data-theme='highContrast'] .sr-only-focusable:focus-visible {
+html[data-theme='dark'] .sr-only-focusable:focus-visible {
   background-color: #000000;
   color: #ffffff;
 }

@@ -2,11 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   makeStyles,
-  Menu,
-  MenuItemRadio,
-  MenuList,
-  MenuPopover,
-  MenuTrigger,
   shorthands,
   tokens,
   ToolbarButton,
@@ -15,12 +10,10 @@ import {
 } from '@fluentui/react-components'
 import {
   Bot24Regular,
-  Color24Regular,
   DarkTheme24Regular,
-  Settings24Regular,
   WeatherSunny24Regular,
 } from '@fluentui/react-icons'
-import { useThemeMode, type ThemeMode } from '../lib/themeContext'
+import { useThemeMode } from '../lib/themeContext'
 
 const useStyles = makeStyles({
   root: {
@@ -79,12 +72,10 @@ export interface AppShellProps {
   children: ReactNode
 }
 
-const MODE_LABELS: Record<ThemeMode, string> = {
+const MODE_LABELS = {
   light: 'Light',
   dark: 'Dark',
-  highContrast: 'High contrast',
-  system: 'Match system',
-}
+} as const
 
 /**
  * Best-effort, human-readable name for the current route. Used by the
@@ -111,52 +102,22 @@ function describeRoute(pathname: string): string {
 }
 
 function ThemeToggle() {
-  const { mode, setMode } = useThemeMode()
-  const selectedValues = { mode: [mode] }
-  const tooltip = `Theme: ${MODE_LABELS[mode]}`
+  const { mode, toggle } = useThemeMode()
+  const isDark = mode === 'dark'
+  // Speak the *destination*, not the current state — a button labeled
+  // "switch to dark mode" is the standard pattern and matches what
+  // screen-reader users expect from a single-action toggle.
+  const nextLabel = isDark ? MODE_LABELS.light : MODE_LABELS.dark
+  const tooltip = `Switch to ${nextLabel.toLowerCase()} theme`
   return (
-    <Menu
-      checkedValues={selectedValues}
-      onCheckedValueChange={(_, data) => {
-        const next = data.checkedItems[0] as ThemeMode | undefined
-        if (next) setMode(next)
-      }}
-    >
-      <MenuTrigger disableButtonEnhancement>
-        <Tooltip content={tooltip} relationship="label" withArrow>
-          <ToolbarButton
-            aria-label={`Theme: ${MODE_LABELS[mode]}. Activate to change.`}
-            icon={
-              mode === 'dark' ? (
-                <DarkTheme24Regular />
-              ) : mode === 'highContrast' ? (
-                <Color24Regular />
-              ) : mode === 'light' ? (
-                <WeatherSunny24Regular />
-              ) : (
-                <Settings24Regular />
-              )
-            }
-          />
-        </Tooltip>
-      </MenuTrigger>
-      <MenuPopover>
-        <MenuList>
-          <MenuItemRadio name="mode" value="light">
-            {MODE_LABELS.light}
-          </MenuItemRadio>
-          <MenuItemRadio name="mode" value="dark">
-            {MODE_LABELS.dark}
-          </MenuItemRadio>
-          <MenuItemRadio name="mode" value="highContrast">
-            {MODE_LABELS.highContrast}
-          </MenuItemRadio>
-          <MenuItemRadio name="mode" value="system">
-            {MODE_LABELS.system}
-          </MenuItemRadio>
-        </MenuList>
-      </MenuPopover>
-    </Menu>
+    <Tooltip content={tooltip} relationship="label" withArrow>
+      <ToolbarButton
+        aria-label={tooltip}
+        aria-pressed={isDark}
+        icon={isDark ? <WeatherSunny24Regular /> : <DarkTheme24Regular />}
+        onClick={toggle}
+      />
+    </Tooltip>
   )
 }
 

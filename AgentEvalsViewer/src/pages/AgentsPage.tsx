@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Body1,
@@ -18,7 +18,6 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import {
-  Add24Regular,
   ChevronDown16Regular,
   ChevronUp16Regular,
   Delete20Regular,
@@ -32,7 +31,6 @@ import { useAccessibleBots } from '../api/queries'
 import { AgentSummaryStrip } from '../components/AgentSummaryStrip'
 import { RecentlyViewedCard } from '../components/RecentlyViewedCard'
 import { RetentionBanner } from '../components/RetentionBanner'
-import { AgentIdHelpPopover } from '../components/AgentIdHelpPopover'
 import { CopyIdButton } from '../components/CopyIdButton'
 
 const useStyles = makeStyles({
@@ -68,16 +66,6 @@ const useStyles = makeStyles({
     flexGrow: 1,
     minWidth: '240px',
     maxWidth: '420px',
-  },
-  formRow: {
-    display: 'flex',
-    columnGap: tokens.spacingHorizontalM,
-    alignItems: 'flex-end',
-    flexWrap: 'wrap',
-  },
-  fieldGrow: {
-    flexGrow: 1,
-    minWidth: '220px',
   },
   list: {
     display: 'flex',
@@ -126,28 +114,10 @@ const useStyles = makeStyles({
     columnGap: tokens.spacingHorizontalXS,
     minWidth: 0,
   },
-  idHelpRow: {
-    display: 'flex',
-    alignItems: 'center',
-    columnGap: tokens.spacingHorizontalXS,
-    minHeight: '28px',
-  },
-  requiredAsterisk: {
-    color: tokens.colorPaletteRedForeground1,
-    marginLeft: '2px',
-  },
   recentToggleRow: {
     display: 'flex',
     justifyContent: 'flex-start',
     marginTop: tokens.spacingVerticalS,
-  },
-  toggleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    columnGap: tokens.spacingHorizontalXS,
-  },
-  hiddenAdvanced: {
-    display: 'none',
   },
   emptyHint: {
     color: tokens.colorNeutralForeground3,
@@ -160,11 +130,8 @@ const useStyles = makeStyles({
 export function AgentsPage() {
   const styles = useStyles()
   const navigate = useNavigate()
-  const { agents, addAgent, removeAgent } = useTrackedAgents()
-  const [agentId, setAgentId] = useState('')
-  const [nickname, setNickname] = useState('')
+  const { agents, removeAgent } = useTrackedAgents()
   const [showRecentVisits, setShowRecentVisits] = useState(false)
-  const [showAddByIdForm, setShowAddByIdForm] = useState(false)
   const [discoveredFilter, setDiscoveredFilter] = useState('')
   const recentVisits = useRecentVisits()
   const accessibleBotsQuery = useAccessibleBots()
@@ -193,15 +160,7 @@ export function AgentsPage() {
     )
   }, [discoveredBots, trackedIds, discoveredFilter])
 
-  const handleAdd = (event: FormEvent) => {
-    event.preventDefault()
-    if (!agentId.trim()) return
-    addAgent({ agentId, nickname })
-    setAgentId('')
-    setNickname('')
-    // Keep the form open so makers adding several can keep going. They
-    // can collapse it themselves when done.
-  }
+
 
   const totalAgents = agents.length + discoveredBots.length
   const isDiscoveryLoading =
@@ -365,84 +324,9 @@ export function AgentsPage() {
         </div>
       ) : null}
 
-      {/* ── Add-by-ID escape hatch — collapsed by default ─────── */}
-      <div className={styles.toggleRow}>
-        <Button
-          appearance="subtle"
-          size="small"
-          icon={
-            showAddByIdForm ? (
-              <ChevronUp16Regular />
-            ) : (
-              <ChevronDown16Regular />
-            )
-          }
-          onClick={() => setShowAddByIdForm((v) => !v)}
-          title={
-            showAddByIdForm
-              ? 'Hide the add-by-ID form'
-              : 'Add an agent by ID (e.g. a bot from another environment)'
-          }
-        >
-          {showAddByIdForm ? 'Hide add-by-ID' : 'Add an agent by ID'}
-        </Button>
-      </div>
-
-      {showAddByIdForm ? (
-        <form className={styles.card} onSubmit={handleAdd}>
-          <Subtitle1>Add an agent by ID</Subtitle1>
-          <Body1 as="p">
-            For bots you can't see in the discovered list above — usually
-            because they live in a different environment or your Dataverse
-            role doesn't grant read access. Paste the <code>cdsBotId</code>{' '}
-            GUID from Copilot Studio.
-          </Body1>
-          <div className={styles.formRow}>
-            <Field
-              className={styles.fieldGrow}
-              label={
-                <div className={styles.idHelpRow}>
-                  <span>
-                    Agent ID
-                    <span
-                      className={styles.requiredAsterisk}
-                      aria-hidden="true"
-                    >
-                      *
-                    </span>
-                  </span>
-                  <AgentIdHelpPopover />
-                </div>
-              }
-              required
-            >
-              <Input
-                value={agentId}
-                onChange={(_, data) => setAgentId(data.value)}
-                placeholder="00000000-0000-0000-0000-000000000000"
-              />
-            </Field>
-            <Field
-              className={styles.fieldGrow}
-              label={<div className={styles.idHelpRow}>Nickname</div>}
-            >
-              <Input
-                value={nickname}
-                onChange={(_, data) => setNickname(data.value)}
-                placeholder="HR Assistant (prod)"
-              />
-            </Field>
-            <Button
-              type="submit"
-              appearance="primary"
-              icon={<Add24Regular />}
-              disabled={!agentId.trim()}
-            >
-              Track agent
-            </Button>
-          </div>
-        </form>
-      ) : null}
+      {/* Add-by-ID flow removed — discovered list above is the single
+          entry point. Tracked-manually agents added previously are still
+          shown so users can open or remove them. */}
 
       {recentVisits.length > 0 ? (
         <div className={styles.recentToggleRow}>

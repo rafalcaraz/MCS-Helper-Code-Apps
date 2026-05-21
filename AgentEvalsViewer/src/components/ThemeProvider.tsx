@@ -7,55 +7,32 @@ import {
 } from 'react'
 import {
   FluentProvider,
-  type Theme,
   webDarkTheme,
   webLightTheme,
-  teamsHighContrastTheme,
 } from '@fluentui/react-components'
 import {
   ThemeContext,
-  type ResolvedTheme,
   type ThemeContextValue,
   type ThemeMode,
 } from '../lib/themeContext'
 
 const STORAGE_KEY = 'aev:themeMode'
 
-const THEME_BY_RESOLVED: Record<ResolvedTheme, Theme> = {
-  light: webLightTheme,
-  dark: webDarkTheme,
-  highContrast: teamsHighContrastTheme,
-}
-
-function readStoredMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'system'
+function pickInitialMode(): ThemeMode {
+  if (typeof window === 'undefined') return 'light'
+  // Honor a previously persisted choice first.
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (
-      raw === 'light' ||
-      raw === 'dark' ||
-      raw === 'highContrast' ||
-      raw === 'system'
-    ) {
-      return raw
-    }
+    if (raw === 'light' || raw === 'dark') return raw
   } catch {
-    // localStorage may be blocked (private mode, sandboxed iframe) — fall
-    // through to the OS-driven default.
+    // localStorage may be blocked (private mode, sandboxed iframe).
   }
-  return 'system'
-}
-
-function resolveSystem(): ResolvedTheme {
-  if (typeof window === 'undefined' || !window.matchMedia) return 'light'
-  // Forced high-contrast wins over plain dark — accessibility trumps aesthetics.
-  if (window.matchMedia('(prefers-contrast: more)').matches) {
-    return 'highContrast'
-  }
-  if (window.matchMedia('(forced-colors: active)').matches) {
-    return 'highContrast'
-  }
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  // First-time visitor: seed from the OS preference so dark-mode users
+  // don't get blinded on landing. They can still flip it from the header.
+  if (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  ) {
     return 'dark'
   }
   return 'light'
@@ -66,37 +43,18 @@ export interface ThemeProviderProps {
 }
 
 /**
- * App-wide theme provider. Owns the user's preferred mode, persists it in
- * `localStorage`, listens to OS-level `prefers-color-scheme` /
- * `prefers-contrast` so `'system'` stays live, and feeds the resolved
- * Fluent `Theme` straight into `FluentProvider`. Also keeps the
- * `<html data-theme="…" style="color-scheme: …">` attributes in sync so
- * native form controls, scrollbars, and the pre-mount background match.
+ * App-wide theme provider. Owns the user's choice between light and dark
+ * Fluent themes, persists it in `localStorage`, and feeds the resolved
+ * theme straight into `FluentProvider`. Also keeps `<html data-theme="…"
+ * style="color-scheme: …">` in sync so native form controls, scrollbars,
+ * and the pre-mount background match.
+ *
+ * The first visit seeds from the OS-level `prefers-color-scheme` so dark
+ * users land in dark. After that the persisted choice always wins — we
+ * don't override what they explicitly picked, even if the OS swaps.
  */
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode())
-  const [systemResolved, setSystemResolved] = useState<ResolvedTheme>(() =>
-    resolveSystem(),
-  )
-
-  // Keep `'system'` honest as OS preferences change underneath us.
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return
-    const queries = [
-      window.matchMedia('(prefers-color-scheme: dark)'),
-      window.matchMedia('(prefers-contrast: more)'),
-      window.matchMedia('(forced-colors: active)'),
-    ]
-    const recompute = () => setSystemResolved(resolveSystem())
-    for (const q of queries) {
-      q.addEventListener?.('change', recompute)
-    }
-    return () => {
-      for (const q of queries) {
-        q.removeEventListener?.('change', recompute)
-      }
-    }
-  }, [])
+  const [mode, setModeState] = useState<ThemeMode>(() => pickInitialMode())
 
   const setMode = useCallback((next: ThemeMode) => {
     setModeState(next)
@@ -107,20 +65,23 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [])
 
-  const resolved: ResolvedTheme = mode === 'system' ? systemResolved : mode
-  const theme = THEME_BY_RESOLVED[resolved]
-  const isDark = resolved !== 'light'
+  const toggle = useCallback(() => {
+    setMode(mode === 'dark' ? 'light' : 'dark')
+  }, [mode, setMode])
+
+  const theme = mode === 'dark' ? webDarkTheme : webLightTheme
+  const isDark = mode === 'dark'
 
   useEffect(() => {
     if (typeof document === 'undefined') return
     const root = document.documentElement
-    root.style.colorScheme = resolved === 'light' ? 'light' : 'dark'
-    root.dataset.theme = resolved
-  }, [resolved])
+    root.style.colorScheme = mode
+    root.dataset.theme = mode
+  }, [mode])
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ mode, resolved, theme, isDark, setMode }),
-    [mode, resolved, theme, isDark, setMode],
+    () => ({ mode, theme, isDark, setMode, toggle }),
+    [mode, theme, isDark, setMode, toggle],
   )
 
   return (
