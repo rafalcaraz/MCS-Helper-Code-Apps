@@ -45,6 +45,9 @@ import {
 } from '../lib/metrics'
 import { useAllLastViewedRuns, getMarkerRunIdFor } from '../hooks/useLastViewedRun'
 import { useAgentDisplayName } from '../hooks/useAgentDisplayName'
+import { useEnvironmentId } from '../hooks/useEnvironmentId'
+import { getCpsAgentEvaluationsUrl } from '../lib/cpsLinks'
+import { OpenInCpsLink } from '../components/OpenInCpsLink'
 import type { TestRun, TestSet } from '../generated/models/MicrosoftCopilotStudioModel'
 
 const useStyles = makeStyles({
@@ -95,6 +98,10 @@ const useStyles = makeStyles({
     padding: tokens.spacingHorizontalXL,
     borderRadius: tokens.borderRadiusLarge,
     boxShadow: tokens.shadow4,
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: tokens.spacingVerticalM,
+    alignItems: 'flex-start',
   },
   list: {
     display: 'grid',
@@ -281,6 +288,9 @@ export function AgentDetailPage() {
     [cards],
   )
 
+  const envId = useEnvironmentId()
+  const cpsAgentEvalsUrl = getCpsAgentEvaluationsUrl(envId ?? undefined, agentId)
+
   const showHealthStrip = cards.length > 0 && health.totalSets > 0
   const showAgentTrend = allRuns.length >= 2
 
@@ -377,9 +387,17 @@ export function AgentDetailPage() {
         <div className={styles.empty}>
           <Subtitle1>No test sets yet</Subtitle1>
           <Body1 as="p">
-            Create a test set in Copilot Studio's Evaluation page for this
-            agent. New test sets and runs will appear here.
+            This agent doesn't have any evaluation test sets yet. Create
+            one in Copilot Studio — when you run it, results will show
+            up here automatically.
           </Body1>
+          <OpenInCpsLink
+            url={cpsAgentEvalsUrl}
+            label="Create evaluations in Copilot Studio"
+            tooltip="Opens this agent's Evaluations page in Copilot Studio"
+            size="medium"
+            appearance="primary"
+          />
         </div>
       ) : (
         <div className={styles.list}>

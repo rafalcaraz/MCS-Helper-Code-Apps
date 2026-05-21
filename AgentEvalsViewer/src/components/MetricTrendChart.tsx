@@ -132,18 +132,18 @@ export function MetricTrendChart({
         data={data}
         margin={{ top: 16, right: 24, bottom: 8, left: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e1dfdd" />
+        <CartesianGrid strokeDasharray="3 3" stroke={tokens.colorNeutralStroke2} />
         <XAxis
           dataKey="ts"
           type="number"
           domain={['dataMin', 'dataMax']}
           tickFormatter={buildTimeTickFormatter(data.map((d) => d.ts))}
-          stroke="#605e5c"
+          stroke={tokens.colorNeutralForeground3}
         />
         <YAxis
           domain={[0, 100]}
           tickFormatter={(v: number) => `${v}%`}
-          stroke="#605e5c"
+          stroke={tokens.colorNeutralForeground3}
         />
         <Tooltip
           contentStyle={{ fontSize: 12 }}

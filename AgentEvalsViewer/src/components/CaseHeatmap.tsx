@@ -237,7 +237,7 @@ const LEGEND_STATUSES: CaseStatus[] = [
 ]
 
 function cellColor(cell: HeatmapCell): string {
-  if (!cell.present) return '#ebe9e6'
+  if (!cell.present) return tokens.colorNeutralBackground3
   return statusColor(cell.status)
 }
 
@@ -298,13 +298,13 @@ function streakChipLabel(streak: CaseStreak): string | null {
 function streakChipColor(streak: CaseStreak): string {
   switch (streak.kind) {
     case 'passing':
-      return '#107c10'
+      return tokens.colorPaletteGreenForeground1
     case 'failing':
-      return '#d13438'
+      return tokens.colorPaletteRedForeground1
     case 'flaky':
-      return '#b88600'
+      return tokens.colorPaletteMarigoldForeground2
     default:
-      return '#8a8886'
+      return tokens.colorNeutralForeground3
   }
 }
 
@@ -471,7 +471,7 @@ export function CaseHeatmap({
         <span className={styles.swatch}>
           <span
             className={styles.swatchSquare}
-            style={{ backgroundColor: '#ebe9e6' }}
+            style={{ backgroundColor: tokens.colorNeutralBackground3 }}
             aria-hidden
           />
           not in run

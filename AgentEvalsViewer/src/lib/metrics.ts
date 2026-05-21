@@ -1,3 +1,4 @@
+import { tokens } from '@fluentui/react-components'
 import {
   compareRunsByStartTimeAsc,
   compareRunsByStartTimeDesc,
@@ -127,28 +128,34 @@ export function metricLabel(type: string | undefined): string {
   return METRIC_LABELS[type] ?? humanize(type)
 }
 
+/**
+ * Color hint for a known metric type, returned as a Fluent palette CSS
+ * variable so the chip / legend swatch automatically adapts to the active
+ * theme when used in an inline `style`. For Recharts `stroke`/`fill` props
+ * (which don't resolve `var()`), use `useChartColors()` from `lib/theme`.
+ */
 const METRIC_COLORS: Record<string, string> = {
-  GeneralQuality: '#0078d4',
-  CapabilityUse: '#8a3ffc',
-  AnyKeywordMatch: '#107c10',
-  AllKeywordMatch: '#13a10e',
-  CompareMeaning: '#cc1f72',
-  TextSimilarity: '#ca5010',
-  CustomLabels: '#7a7574',
+  GeneralQuality: tokens.colorBrandForeground1,
+  CapabilityUse: tokens.colorPalettePurpleForeground2,
+  AnyKeywordMatch: tokens.colorPaletteGreenForeground1,
+  AllKeywordMatch: tokens.colorPaletteLightGreenForeground2,
+  CompareMeaning: tokens.colorPalettePinkForeground2,
+  TextSimilarity: tokens.colorPaletteDarkOrangeForeground2,
+  CustomLabels: tokens.colorNeutralForeground3,
 }
 
 const FALLBACK_PALETTE = [
-  '#005a9e',
-  '#bf0077',
-  '#498205',
-  '#8764b8',
-  '#c19c00',
-  '#0a7c84',
-  '#a4373a',
+  tokens.colorBrandForeground2,
+  tokens.colorPaletteBerryForeground1,
+  tokens.colorPaletteLightGreenForeground2,
+  tokens.colorPalettePurpleForeground2,
+  tokens.colorPaletteYellowForeground2,
+  tokens.colorPaletteTealForeground2,
+  tokens.colorPaletteCranberryForeground2,
 ]
 
 export function metricColor(type: string | undefined): string {
-  if (!type) return '#8a8886'
+  if (!type) return tokens.colorNeutralForeground3
   if (METRIC_COLORS[type]) return METRIC_COLORS[type]
   let hash = 0
   for (let i = 0; i < type.length; i++) {
@@ -170,15 +177,15 @@ export function normalizeMetricStatus(s: string | undefined): MetricStatus {
 export function metricStatusColor(s: MetricStatus): string {
   switch (s) {
     case 'Pass':
-      return '#107c10'
+      return tokens.colorPaletteGreenForeground1
     case 'Fail':
-      return '#d13438'
+      return tokens.colorPaletteRedForeground1
     case 'Invalid':
-      return '#b88600'
+      return tokens.colorPaletteMarigoldForeground2
     case 'Error':
-      return '#8a3ffc'
+      return tokens.colorPalettePurpleForeground2
     default:
-      return '#8a8886'
+      return tokens.colorNeutralForeground3
   }
 }
 
