@@ -1,3 +1,4 @@
+import { tokens } from '@fluentui/react-components'
 import type {
   TestCaseMetric,
   TestCaseResult,
@@ -233,17 +234,27 @@ export function getTestSetName(testSet: TestSet | undefined): string {
   return testSet.displayName?.trim() || testSet.id || 'Test set'
 }
 
+/**
+ * Returns a Fluent palette CSS variable for the given case status. Because
+ * these are `var(--…)` strings rather than raw hex, they automatically pick
+ * up the active theme (light / dark / high-contrast) wherever the value is
+ * fed through an inline `style` — which covers virtually every caller.
+ *
+ * If you need a concrete hex value (e.g. when passing into Recharts SVG
+ * `stroke` / `fill` props, which don't resolve `var()`), reach for the
+ * `useChartColors()` hook in `lib/theme.tsx` instead.
+ */
 export function statusColor(status: CaseStatus): string {
   switch (status) {
     case 'Pass':
-      return '#107c10'
+      return tokens.colorPaletteGreenForeground1
     case 'Fail':
-      return '#d13438'
+      return tokens.colorPaletteRedForeground1
     case 'Invalid':
-      return '#b88600'
+      return tokens.colorPaletteMarigoldForeground2
     case 'Error':
-      return '#8a3ffc'
+      return tokens.colorPalettePurpleForeground2
     default:
-      return '#8a8886'
+      return tokens.colorNeutralForeground3
   }
 }

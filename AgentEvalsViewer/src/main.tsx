@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
-import { FluentProvider, webLightTheme } from '@fluentui/react-components'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import App from './App.tsx'
 import { PowerProvider } from './components/PowerProvider'
+import { ThemeProvider } from './components/ThemeProvider'
 import { classifyApiError } from './lib/apiErrors'
 
 const queryClient = new QueryClient({
@@ -31,9 +31,15 @@ const queryClient = new QueryClient({
   },
 })
 
+/*
+ * `ThemeProvider` wraps `FluentProvider` internally, so it owns both the
+ * user's persisted mode preference (light / dark / high-contrast / system)
+ * and the active Fluent theme tokens. Everything else just consumes
+ * `useThemeMode()` from `lib/themeContext` when it needs to render UI.
+ */
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <FluentProvider theme={webLightTheme}>
+    <ThemeProvider>
       <PowerProvider>
         <QueryClientProvider client={queryClient}>
           <HashRouter>
@@ -41,6 +47,6 @@ createRoot(document.getElementById('root')!).render(
           </HashRouter>
         </QueryClientProvider>
       </PowerProvider>
-    </FluentProvider>
+    </ThemeProvider>
   </StrictMode>,
 )

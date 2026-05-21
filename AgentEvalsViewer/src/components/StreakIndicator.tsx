@@ -56,11 +56,11 @@ const KIND_LABEL: Record<StreakKind, string> = {
 }
 
 const KIND_COLOR: Record<StreakKind, string> = {
-  passing: '#107c10',
-  failing: '#d13438',
-  flaky: '#b88600',
-  mixed: '#7a7574',
-  unknown: '#8a8886',
+  passing: tokens.colorPaletteGreenForeground1,
+  failing: tokens.colorPaletteRedForeground1,
+  flaky: tokens.colorPaletteMarigoldForeground2,
+  mixed: tokens.colorNeutralForeground3,
+  unknown: tokens.colorNeutralForeground4,
 }
 
 export interface StreakIndicatorProps {

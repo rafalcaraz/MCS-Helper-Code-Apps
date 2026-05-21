@@ -88,7 +88,7 @@ export function MetricChipStack({ run, labelOnly }: MetricChipStackProps) {
                 borderColor: tokens.colorPaletteRedBorderActive,
               }
             : s.passRate! < 0.5
-              ? { borderColor: '#d13438' }
+              ? { borderColor: tokens.colorPaletteRedForeground1 }
               : {}
         return (
           <span
@@ -101,7 +101,7 @@ export function MetricChipStack({ run, labelOnly }: MetricChipStackProps) {
               className={styles.swatch}
               style={{
                 backgroundColor: isZero
-                  ? 'rgba(255,255,255,0.85)'
+                  ? tokens.colorNeutralForegroundOnBrand
                   : metricColor(s.type),
               }}
               aria-hidden

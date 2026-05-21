@@ -1,10 +1,104 @@
+/*
+ * Hint the user agent that this app supports both color schemes so native
+ * UI (scrollbars, form controls, the page background that flashes before
+ * React mounts) matches whichever Fluent theme the user picked. The actual
+ * theme switch is driven by ThemeProvider, which sets `color-scheme` on
+ * <html> to the resolved value (light, dark, or dark-for-high-contrast).
+ */
+:root {
+  color-scheme: light dark;
+}
+
 html, body, #root {
   margin: 0;
   padding: 0;
   min-height: 100vh;
 }
 
+/*
+ * Body background fallback that survives the brief window before
+ * FluentProvider applies its tokens — and matches the dark theme too so
+ * dark-mode users don't see a flash of white on cold reload.
+ */
 body {
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto',
     'Helvetica Neue', sans-serif;
+  background-color: #fafafa;
+  color: #242424;
+}
+html[data-theme='dark'] body,
+html[data-theme='highContrast'] body {
+  background-color: #1f1f1f;
+  color: #ffffff;
+}
+html[data-theme='highContrast'] body {
+  background-color: #000000;
+}
+
+/*
+ * Visible focus indicator for keyboard users on every focusable element.
+ * Fluent UI's own controls already render a strong focus ring; this catches
+ * the raw <a> / <button> / [tabindex] cases (e.g. the skip link, anchors
+ * inside cards) so nothing slips through.
+ */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * Screen-reader-only utility used by the skip link before it gains focus
+ * and by live regions that announce route changes without taking layout
+ * space.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only-focusable:focus,
+.sr-only-focusable:focus-visible {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  z-index: 10000;
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  text-decoration: none;
+  font: inherit;
+  font-weight: 600;
+}
+html[data-theme='dark'] .sr-only-focusable:focus,
+html[data-theme='dark'] .sr-only-focusable:focus-visible,
+html[data-theme='highContrast'] .sr-only-focusable:focus,
+html[data-theme='highContrast'] .sr-only-focusable:focus-visible {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Respect motion preferences across the app. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

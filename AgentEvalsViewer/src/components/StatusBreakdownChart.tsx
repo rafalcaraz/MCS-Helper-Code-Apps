@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { tokens } from '@fluentui/react-components'
 import type { TestRun } from '../generated/models/MicrosoftCopilotStudioModel'
 import {
   compareRunsByStartTimeAsc,
@@ -70,9 +71,9 @@ export function StatusBreakdownChart({
         data={data}
         margin={{ top: 16, right: 24, bottom: 8, left: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e1dfdd" />
-        <XAxis dataKey="label" stroke="#605e5c" />
-        <YAxis allowDecimals={false} stroke="#605e5c" />
+        <CartesianGrid strokeDasharray="3 3" stroke={tokens.colorNeutralStroke2} />
+        <XAxis dataKey="label" stroke={tokens.colorNeutralForeground3} />
+        <YAxis allowDecimals={false} stroke={tokens.colorNeutralForeground3} />
         <Tooltip contentStyle={{ fontSize: 12 }} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="Pass" stackId="a" fill={statusColor('Pass')} />

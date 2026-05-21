@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { tokens } from '@fluentui/react-components'
 import type { TestRun } from '../generated/models/MicrosoftCopilotStudioModel'
 import {
   compareRunsByStartTimeAsc,
@@ -68,18 +69,18 @@ export function PassRateTrendChart({
         data={data}
         margin={{ top: 16, right: 24, bottom: 8, left: 0 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e1dfdd" />
+        <CartesianGrid strokeDasharray="3 3" stroke={tokens.colorNeutralStroke2} />
         <XAxis
           dataKey="ts"
           type="number"
           domain={['dataMin', 'dataMax']}
           tickFormatter={tickFormatter}
-          stroke="#605e5c"
+          stroke={tokens.colorNeutralForeground3}
         />
         <YAxis
           domain={[0, 100]}
           tickFormatter={(v: number) => `${v}%`}
-          stroke="#605e5c"
+          stroke={tokens.colorNeutralForeground3}
         />
         <Tooltip
           formatter={(value) => [
@@ -96,9 +97,9 @@ export function PassRateTrendChart({
         <Line
           type="monotone"
           dataKey="passRate"
-          stroke="#0078d4"
+          stroke={tokens.colorBrandStroke1}
           strokeWidth={2}
-          dot={{ r: 3 }}
+          dot={{ r: 3, fill: tokens.colorBrandStroke1 }}
           activeDot={{ r: 5 }}
           name="Pass rate"
         />
@@ -147,7 +148,7 @@ export function PassRateSparkline({
       role="img"
       aria-label={`Pass-rate trend across ${points.length} runs (latest ${formatPassRate(points[points.length - 1])})`}
     >
-      <path d={path} fill="none" stroke="#0078d4" strokeWidth={1.5} />
+      <path d={path} fill="none" stroke={tokens.colorBrandStroke1} strokeWidth={1.5} />
     </svg>
   )
 }

@@ -38,7 +38,7 @@ const useStyles = makeStyles({
     width: '6px',
     height: '6px',
     borderRadius: tokens.borderRadiusCircular,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: tokens.colorNeutralForegroundOnBrand,
     display: 'inline-block',
   },
 })

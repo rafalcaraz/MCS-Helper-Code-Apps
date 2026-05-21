@@ -115,18 +115,18 @@ export function AgentTrendChart({
           data={data}
           margin={{ top: 12, right: 24, bottom: 8, left: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e1dfdd" />
+          <CartesianGrid strokeDasharray="3 3" stroke={tokens.colorNeutralStroke2} />
           <XAxis
             dataKey="ts"
             type="number"
             domain={['dataMin', 'dataMax']}
             tickFormatter={tickFormatter}
-            stroke="#605e5c"
+            stroke={tokens.colorNeutralForeground3}
           />
           <YAxis
             domain={[0, 100]}
             tickFormatter={(v: number) => `${v}%`}
-            stroke="#605e5c"
+            stroke={tokens.colorNeutralForeground3}
           />
           <Tooltip
             formatter={(value, name, payload) => {
@@ -176,9 +176,9 @@ export function AgentTrendChart({
           <Line
             type="monotone"
             dataKey="passRate"
-            stroke="#0078d4"
+            stroke={tokens.colorBrandStroke1}
             strokeWidth={2}
-            dot={{ r: 3 }}
+            dot={{ r: 3, fill: tokens.colorBrandStroke1 }}
             activeDot={{ r: 5 }}
             name="Pass rate"
           />

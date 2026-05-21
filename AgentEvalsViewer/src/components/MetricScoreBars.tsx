@@ -83,7 +83,7 @@ function Row({ stats }: RowProps) {
           style={{
             width: `${pct}%`,
             backgroundColor:
-              stats.passRate === null ? '#ccc' : stats.color,
+              stats.passRate === null ? tokens.colorNeutralStroke2 : stats.color,
           }}
         />
       </div>
